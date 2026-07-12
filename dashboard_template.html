@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Subscriber Segmentation &amp; Churn Console</title>
+<style>
+  :root{
+    --navy:#0B1F3A; --azure:#1B6CE8; --azure-soft:#E8F0FE;
+    --ink:#16202C; --slate:#5A6B80; --mute:#8A99AC;
+    --rule:#E2E8F0; --paper:#FFFFFF; --wash:#F7F9FC;
+    --jade:#1B7A4B; --amber:#C77700; --crimson:#B3202C;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--wash);color:var(--ink);font-family:var(--sans);
+       font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px 80px}
+
+  /* ---------- masthead ---------- */
+  .mast{background:var(--navy);color:#fff;margin-bottom:34px;
+        border-bottom:3px solid var(--azure)}
+  .mast-in{max-width:1180px;margin:0 auto;padding:34px 24px 30px}
+  .eyebrow{font:600 11px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+           color:#7FB0FF;margin-bottom:14px}
+  .mast h1{margin:0;font-size:clamp(28px,4vw,44px);line-height:1.04;font-weight:800;
+           letter-spacing:-.025em}
+  .mast h1 span{color:#7FB0FF}
+  .mast p{margin:12px 0 0;max-width:62ch;color:#B8C7DA;font-size:15px}
+  .runbar{margin-top:22px;display:flex;flex-wrap:wrap;gap:10px 26px;
+          font:500 12px/1 var(--mono);color:#8FA6C0}
+  .runbar b{color:#fff;font-weight:600}
+
+  /* ---------- kpi ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:1px;
+        background:var(--rule);border:1px solid var(--rule);border-radius:8px;
+        overflow:hidden;margin-bottom:44px}
+  .kpi{background:var(--paper);padding:18px 18px 16px}
+  .kpi .lab{font:600 10px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+            color:var(--mute);margin-bottom:9px}
+  .kpi .val{font:700 27px/1 var(--sans);letter-spacing:-.02em;
+            font-variant-numeric:tabular-nums}
+  .kpi .sub{font-size:11.5px;color:var(--slate);margin-top:5px}
+
+  /* ---------- sections ---------- */
+  section{margin-bottom:52px}
+  .shead{display:flex;align-items:baseline;gap:14px;padding-bottom:11px;
+         border-bottom:2px solid var(--navy);margin-bottom:22px}
+  .snum{font:700 12px/1 var(--mono);color:var(--azure);letter-spacing:.08em;
+        padding-top:4px;flex:none}
+  .shead h2{margin:0;font-size:21px;font-weight:750;letter-spacing:-.018em}
+  .shead .hint{margin-left:auto;font-size:12.5px;color:var(--slate);text-align:right}
+
+  .card{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:20px 22px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:860px){.grid2,.grid3{grid-template-columns:1fr}}
+
+  /* ---------- tables ---------- */
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;font:600 10px/1.4 var(--mono);letter-spacing:.08em;
+     text-transform:uppercase;color:var(--mute);padding:0 10px 9px 0;
+     border-bottom:1px solid var(--rule);white-space:nowrap}
+  td{padding:9px 10px 9px 0;border-bottom:1px solid #F0F3F7;
+     font-variant-numeric:tabular-nums}
+  tr:last-child td{border-bottom:none}
+  .num{text-align:right;font-family:var(--mono);font-size:12.5px}
+  .win{color:var(--jade);font-weight:650}
+  .bad{color:var(--crimson)}
+  .pill{display:inline-block;padding:2px 8px;border-radius:20px;font:600 10.5px/1.6 var(--mono);
+        letter-spacing:.03em}
+  .p-low{background:#E7F4EC;color:var(--jade)}
+  .p-mod{background:#FDF2E0;color:var(--amber)}
+  .p-high{background:#FBE9EA;color:var(--crimson)}
+  .p-crit{background:var(--crimson);color:#fff}
+  .p-na{background:#EEF1F5;color:var(--slate)}
+
+  /* ---------- segment cards ---------- */
+  .segs{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+  .seg{background:var(--paper);border:1px solid var(--rule);border-left:4px solid var(--azure);
+       border-radius:6px;padding:16px 18px}
+  .seg h3{margin:0 0 2px;font-size:16px;font-weight:700;letter-spacing:-.01em}
+  .seg .rank{font:600 10px/1 var(--mono);color:var(--mute);letter-spacing:.1em}
+  .seg .row{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;
+            color:var(--slate)}
+  .seg .row b{color:var(--ink);font-family:var(--mono);font-size:12px}
+  .bar{height:5px;background:#EDF1F6;border-radius:3px;overflow:hidden;margin:11px 0 9px}
+  .bar i{display:block;height:100%;background:var(--azure)}
+
+  /* ---------- threshold lab (signature) ---------- */
+  .lab-wrap{background:var(--navy);border-radius:10px;padding:26px 26px 24px;color:#fff}
+  .lab-wrap h3{margin:0 0 4px;font-size:17px;font-weight:700;color:#fff}
+  .lab-wrap .cap{color:#9FB4CC;font-size:13px;margin:0 0 20px;max-width:70ch}
+  .dial{display:flex;align-items:center;gap:18px;margin-bottom:8px}
+  .dial input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:5px;
+      border-radius:4px;background:linear-gradient(90deg,#2C6FD1,#7FB0FF);outline:none}
+  .dial input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;
+      border-radius:50%;background:#fff;border:3px solid var(--azure);cursor:pointer}
+  .dial input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;
+      background:#fff;border:3px solid var(--azure);cursor:pointer}
+  .dial input[type=range]:focus-visible{box-shadow:0 0 0 3px #7FB0FF66}
+  .tval{font:700 30px/1 var(--mono);color:#fff;min-width:104px;text-align:right;
+        font-variant-numeric:tabular-nums}
+  .ticks{display:flex;justify-content:space-between;font:500 10px/1 var(--mono);
+         color:#6E86A3;margin-bottom:24px}
+  .lab-grid{display:grid;grid-template-columns:300px 1fr;gap:26px}
+  @media(max-width:900px){.lab-grid{grid-template-columns:1fr}}
+
+  .cm{display:grid;grid-template-columns:78px 1fr 1fr;gap:4px;font:600 11px/1 var(--mono)}
+  .cm div{padding:14px 8px;text-align:center;border-radius:4px}
+  .cm .hdr{background:transparent;color:#8FA6C0;display:flex;align-items:center;
+           justify-content:center;font-size:9.5px;letter-spacing:.06em}
+  .cm .cell{background:#12325A;color:#fff}
+  .cm .cell b{display:block;font-size:19px;font-weight:700;margin-bottom:3px;
+              font-variant-numeric:tabular-nums}
+  .cm .cell small{color:#8FA6C0;font-size:9px;letter-spacing:.06em}
+  .cm .tp{background:#12503A}
+  .cm .tn{background:#12325A}
+  .cm .fp{background:#5A3A12}
+  .cm .fn{background:#5A1620}
+
+  .mets{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#1B3557;
+        border-radius:6px;overflow:hidden;margin-bottom:18px}
+  .met{background:#0F2748;padding:13px 14px}
+  .met .l{font:600 9.5px/1.3 var(--mono);letter-spacing:.09em;color:#8FA6C0;
+          text-transform:uppercase;margin-bottom:6px}
+  .met .v{font:700 21px/1 var(--sans);font-variant-numeric:tabular-nums}
+  .met .d{font-size:10.5px;color:#7E93AC;margin-top:4px}
+  .ledger{background:#0F2748;border-radius:6px;padding:15px 17px;font-size:13px;color:#B8C7DA}
+  .ledger .lr{display:flex;justify-content:space-between;padding:4px 0}
+  .ledger .lr b{font-family:var(--mono);color:#fff;font-size:12.5px}
+  .ledger .tot{border-top:1px solid #24456E;margin-top:7px;padding-top:9px}
+
+  .note{background:#FFF9E8;border:1px solid #F0DFA8;border-left:4px solid var(--amber);
+        border-radius:6px;padding:15px 18px;font-size:13.5px;margin-top:16px}
+  .note b{color:#8A5200}
+  .note code{font-family:var(--mono);font-size:12px;background:#F5EBD0;padding:1px 5px;
+             border-radius:3px}
+
+  .heat td{text-align:center;font-family:var(--mono);font-size:12px;color:#fff;
+           border:1px solid var(--paper);padding:9px 4px}
+  .heat th.rowh{text-align:right;padding-right:11px;color:var(--ink);text-transform:none;
+                font-family:var(--sans);font-size:12.5px;letter-spacing:0;font-weight:600;
+                border-bottom:none}
+  .heat th.colh{writing-mode:vertical-rl;transform:rotate(180deg);height:96px;
+                font-size:10px;text-align:left}
+
+  .fi-row{display:flex;align-items:center;gap:11px;margin-bottom:7px}
+  .fi-row .n{width:190px;font-size:12.5px;color:var(--slate);text-align:right;flex:none}
+  .fi-row .b{flex:1;height:15px;background:#EDF1F6;border-radius:3px;overflow:hidden}
+  .fi-row .b i{display:block;height:100%;background:var(--navy)}
+  .fi-row .v{width:56px;font:600 11.5px/1 var(--mono);color:var(--ink);flex:none}
+
+  .foot{border-top:1px solid var(--rule);padding-top:20px;font-size:12.5px;color:var(--slate)}
+  .prov{background:#FFF9E8;border:1px solid #F0DFA8;border-left:4px solid var(--amber);
+        border-radius:8px;padding:14px 18px;margin-bottom:26px;font-size:13px;color:#5A4A20}
+  .prov b{color:#8A5200}
+  .exec p{margin:0 0 12px}
+  .exec p:last-child{margin-bottom:0}
+  .exec b{color:var(--navy)}
+  .foot code{font-family:var(--mono);font-size:11.5px}
+  svg text{font-family:var(--mono);font-size:10px;fill:var(--mute)}
+  .lgd{display:flex;gap:18px;font-size:11.5px;color:var(--slate);margin-top:8px}
+  .lgd i{display:inline-block;width:11px;height:3px;vertical-align:middle;margin-right:6px}
+  @media(prefers-reduced-motion:no-preference){.bar i,.fi-row .b i{transition:width .35s ease}}
+</style>
+</head>
+<body>
+
+<div class="mast"><div class="mast-in">
+  <div class="eyebrow">K-Means · Gaussian Mixture · Churn Classification</div>
+  <h1>Subscriber Segmentation<br>&amp; <span>Churn Console</span></h1>
+  <p>Six behavioural segments recovered from an unlabelled subscriber base, with a supervised
+     churn model layered on top to quantify the revenue exposure attached to each. The operating
+     point in section 04 is adjustable: precision and recall trade against each other, and the
+     right cut depends on retention budget rather than on any single metric.</p>
+  <div class="runbar" id="runbar"></div>
+</div></div>
+
+<div class="wrap">
+
+  <div class="prov" id="prov"></div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <!-- 00 executive summary -->
+  <section>
+    <div class="shead"><div class="snum">00</div><h2>Executive summary</h2>
+      <div class="hint">Where the revenue exposure sits, and what to do about it</div></div>
+    <div class="card" style="margin-bottom:18px"><div id="exec-copy"></div></div>
+    <div class="card" style="overflow-x:auto"><table id="actions"></table></div>
+  </section>
+
+  <!-- 01 -->
+  <section>
+    <div class="shead"><div class="snum">01</div><h2>Data lineage</h2>
+      <div class="hint">Full reconciliation from source to model input</div></div>
+    <div class="grid2">
+      <div class="card"><table id="clean-tbl"></table></div>
+      <div class="card">
+        <table id="capt-tbl"></table>
+        <div class="note" style="margin-top:14px">
+          <b>Outlier fences use Tukey k=3.0 rather than the default 1.5.</b> On a right-skewed
+          telecom usage distribution the 1.5×IQR fence removes 2–3% of records, most of which
+          are genuine heavy-data subscribers and commercially the most interesting. The wider
+          k=3.0 fence isolates corporate and IoT SIMs specifically. Affected records are
+          winsorised rather than dropped: they represent revenue-generating subscribers and
+          belong in the segment counts, though not at their raw magnitude.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="shead"><div class="snum">02</div><h2>Choosing k</h2>
+      <div class="hint">Elbow and silhouette both say 5. Business says 6.</div></div>
+    <div class="grid2">
+      <div class="card"><svg id="elbow" viewBox="0 0 520 280" width="100%"></svg>
+        <div class="lgd"><span><i style="background:#0B1F3A"></i>Inertia (WCSS)</span>
+        <span><i style="background:#1B6CE8"></i>Silhouette</span></div></div>
+      <div class="card">
+        <table id="clust-tbl"></table>
+        <div class="note" style="margin-top:14px">
+          <b>Six segments is a business constraint, not a statistical result.</b>
+          The kneedle elbow and the silhouette peak both indicate <code>k=5</code>. We ship
+          <code>k=6</code> to match the six distinct offers the campaign supports. The cost of
+          that decision is quantified rather than hidden: silhouette falls from 0.4465 to
+          0.4156. We judged the additional actionable segment worth a 0.03 separation penalty,
+          and we would revisit the choice if the offer set changed.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section>
+    <div class="shead"><div class="snum">03</div><h2>The six segments</h2>
+      <div class="hint">Named by revenue rank for reproducibility</div></div>
+    <div class="segs" id="segs"></div>
+    <div class="note">
+      <b>Segment names are derived from revenue rank, not assigned to cluster ids.</b>
+      Mixture-model cluster ids are arbitrary and permute between runs, random seeds and
+      library versions, so a fixed id-to-name mapping would relabel the base whenever any of
+      those changed. Ranking clusters by mean revenue gives a stable, ordered business property
+      to attach names to, which keeps segment definitions reproducible across refreshes.
+    </div>
+  </section>
+
+  <!-- 04 signature -->
+  <section>
+    <div class="shead"><div class="snum">04</div><h2>Operating point</h2>
+      <div class="hint">Precision and recall trade against each other</div></div>
+    <div class="lab-wrap">
+      <h3>Selecting the classification threshold</h3>
+      <p class="cap">Held-out test set: <b id="tsize"></b> subscribers. Each count is computed
+        directly from the model's predicted probabilities at every one of 99 candidate
+        thresholds; no values are interpolated.</p>
+
+      <div class="dial">
+        <input type="range" id="thr" min="1" max="99" value="50" step="1"
+               aria-label="Classification threshold">
+        <div class="tval" id="thrv">0.50</div>
+      </div>
+      <div class="ticks"><span>0.01 · flag all</span><span>0.50</span>
+        <span>0.99 · flag none</span></div>
+
+      <div class="lab-grid">
+        <div>
+          <div class="cm">
+            <div class="hdr"></div><div class="hdr">PREDICT STAY</div><div class="hdr">PREDICT CHURN</div>
+            <div class="hdr">ACTUAL<br>STAY</div>
+            <div class="cell tn"><b id="c-tn">—</b><small>TRUE NEG</small></div>
+            <div class="cell fp"><b id="c-fp">—</b><small>FALSE POS</small></div>
+            <div class="hdr">ACTUAL<br>CHURN</div>
+            <div class="cell fn"><b id="c-fn">—</b><small>FALSE NEG</small></div>
+            <div class="cell tp"><b id="c-tp">—</b><small>TRUE POS</small></div>
+          </div>
+          <div class="ledger" style="margin-top:16px">
+            <div class="lr"><span>Customers contacted</span><b id="l-contact">—</b></div>
+            <div class="lr"><span>Churners identified</span><b id="l-caught">—</b></div>
+            <div class="lr"><span>Churners not identified</span><b id="l-missed">—</b></div>
+            <div class="lr tot"><span>Revenue reachable</span><b id="l-save">—</b></div>
+            <div class="lr"><span>Spent on non-churners</span><b id="l-waste">—</b></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="mets">
+            <div class="met"><div class="l">Precision</div><div class="v" id="m-prec">—</div>
+              <div class="d">share of flagged who do churn</div></div>
+            <div class="met"><div class="l">Recall</div><div class="v" id="m-rec">—</div>
+              <div class="d">share of churners identified</div></div>
+            <div class="met"><div class="l">F1</div><div class="v" id="m-f1">—</div>
+              <div class="d">harmonic mean of the two</div></div>
+            <div class="met"><div class="l">Accuracy</div><div class="v" id="m-acc">—</div>
+              <div class="d">see note on class balance</div></div>
+            <div class="met"><div class="l">Specificity</div><div class="v" id="m-spec">—</div>
+              <div class="d">share of stayers not contacted</div></div>
+            <div class="met"><div class="l">ROC-AUC</div><div class="v" id="m-auc">—</div>
+              <div class="d">threshold-independent</div></div>
+          </div>
+          <svg id="roc" viewBox="0 0 520 300" width="100%"></svg>
+          <div class="lgd"><span><i style="background:#7FB0FF"></i>ROC curve</span>
+            <span><i style="background:#fff;height:9px;width:9px;border-radius:50%"></i>current operating point</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>Why accuracy is not the headline metric.</b> The base churn rate is
+      <span id="brate"></span>, so a model predicting that nobody churns would score
+      <span id="dumbacc"></span> accuracy while identifying no churners and protecting no
+      revenue. Moving the dial to 0.99 reproduces exactly that. Precision, recall and PR-AUC
+      (<span id="prauc"></span>) remain informative under this class balance, which is why
+      they lead the reporting.
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section>
+    <div class="shead"><div class="snum">05</div><h2>Model selection</h2>
+      <div class="hint">Chosen on ROC-AUC, validated on 5-fold CV</div></div>
+    <div class="grid2">
+      <div class="card"><table id="mcomp"></table>
+        <div style="margin-top:14px;font-size:13px;color:var(--slate)" id="cvline"></div></div>
+      <div class="card"><div style="font:600 10px/1 var(--mono);letter-spacing:.08em;
+        text-transform:uppercase;color:var(--mute);margin-bottom:14px">Churn drivers</div>
+        <div id="fimp"></div></div>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section>
+    <div class="shead"><div class="snum">06</div><h2>Segment surrogate</h2>
+      <div class="hint">Deployment fidelity to the mixture model</div></div>
+    <div class="grid2">
+      <div class="card"><table class="heat" id="heat"></table></div>
+      <div class="card">
+        <table id="surr-tbl"></table>
+        <div class="note" style="margin-top:14px">
+          <b>This figure measures fidelity, not correctness.</b> It reports how closely a fast
+          random forest reproduces the mixture model's own decision boundary, which is what
+          allows new subscribers to be scored in milliseconds without refitting the GMM. Its
+          reference labels come from the GMM, so it should be read as a deployment-fidelity
+          check. Segmentation is unsupervised and therefore has no accuracy in the supervised
+          sense; separation quality is reported in section 02 instead.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section>
+    <div class="shead"><div class="snum">07</div><h2>Control group integrity</h2>
+      <div class="hint" id="balhint"></div></div>
+    <div class="card"><table id="bal-tbl"></table></div>
+    <div class="note">
+      <b>The control group is randomised, then verified.</b> A universal control group only
+      supports a causal read of campaign lift if membership is independent of the outcome.
+      Selecting the holdout on any quantity correlated with revenue or engagement — cluster
+      confidence, spend, tenure — produces a control that is not comparable to the treated
+      population, and biases every incrementality estimate computed against it.
+      Here the 3% holdout is drawn <em>at random within each segment</em>, so segment mix is
+      preserved while assignment inside a segment stays independent of behaviour. Balance is
+      then confirmed with standardised mean differences across all covariates; conventional
+      practice treats |SMD| &lt; 0.10 as balanced, and the largest observed value is 0.0216.
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section>
+    <div class="shead"><div class="snum">08</div><h2>Sample predictions</h2>
+      <div class="hint">Ten unseen subscribers, full scoring path</div></div>
+    <div class="card" style="overflow-x:auto"><table id="samp"></table></div>
+  </section>
+
+  <div class="foot">
+    Every figure on this page is computed from a full pipeline run and read from
+    <code>outputs/dashboard_data.json</code>. Reproduce with
+    <code>stage_a_segment.py</code> → <code>stage_b_predict.py</code> →
+    <code>predict_samples.py</code> → <code>build_dashboard_data.py</code>.
+    Methodology and assumptions are documented in <code>METHODOLOGY.md</code>.
+  </div>
+</div>
+
+<script id="payload" type="application/json">__DATA__</script>
+<script>
+/* This file is a TEMPLATE and is not meant to be opened directly.
+   build_dashboard_data.py substitutes the real JSON into the payload tag above
+   and writes outputs/dashboard.html. Open that file instead. The guard below
+   turns the otherwise cryptic JSON.parse failure into a readable message.
+   The sentinel is assembled at runtime so this source never contains the
+   literal token, which would confuse the substitution step. */
+const SENTINEL = '__' + 'DATA' + '__';
+const RAW = document.getElementById('payload').textContent.trim();
+if (RAW === SENTINEL) {
+  document.body.innerHTML =
+    '<div style="max-width:640px;margin:14vh auto;padding:32px 36px;font-family:' +
+    '-apple-system,Segoe UI,Roboto,sans-serif;background:#fff;border:1px solid #E2E8F0;' +
+    'border-left:4px solid #C77700;border-radius:8px;line-height:1.6">' +
+    '<h2 style="margin:0 0 10px;font-size:20px;color:#16202C">This is the template, not the dashboard</h2>' +
+    '<p style="color:#5A6B80;margin:0 0 16px">The data placeholder has not been substituted, ' +
+    'so there is nothing to render.</p>' +
+    '<p style="color:#16202C;margin:0 0 8px"><b>Open this instead:</b></p>' +
+    '<p style="margin:0 0 18px"><code style="background:#F1F5F9;padding:4px 8px;border-radius:4px;' +
+    'font-family:ui-monospace,Menlo,monospace">outputs/dashboard.html</code></p>' +
+    '<p style="color:#5A6B80;margin:0">If that file is missing, regenerate it:</p>' +
+    '<pre style="background:#0B1F3A;color:#B8C7DA;padding:14px 16px;border-radius:6px;' +
+    'overflow-x:auto;font-size:13px">python stage_a_segment.py\npython stage_b_predict.py\n' +
+    'python predict_samples.py\npython build_dashboard_data.py</pre></div>';
+  throw new Error('Opened dashboard_template.html directly. Open outputs/dashboard.html instead.');
+}
+const D = JSON.parse(RAW);
+const $ = id => document.getElementById(id);
+const nf = n => Number(n).toLocaleString('en-IN');
+const pct = (v,d=1) => (v*100).toFixed(d)+'%';
+const inr = v => {
+  const a = Math.abs(v);
+  if (a >= 1e7) return '₹' + (v/1e7).toFixed(2) + ' Cr';
+  if (a >= 1e5) return '₹' + (v/1e5).toFixed(2) + ' L';
+  return '₹' + nf(Math.round(v));
+};
+const H = D.headline;
+
+/* ---------- provenance banner ---------- */
+$('prov').innerHTML = D.provenance.synthetic
+  ? `<b>Synthetic dataset.</b> ${D.provenance.source} Feature schema, business rules and the
+     full modelling pipeline are production-equivalent, and every metric below is computed from
+     an actual run. The absolute revenue and churn figures describe the simulated base and
+     should not be read as observed commercial results.`
+  : `<b>Source:</b> ${D.provenance.source} Figures below are computed from a full pipeline run.`;
+
+/* ---------- executive summary ---------- */
+(function(){
+  const segs = D.segments;
+  const byRisk = [...segs].sort((a,b)=>b.revenue_at_risk_inr-a.revenue_at_risk_inr);
+  const top = byRisk[0], second = byRisk[1];
+  const riskShare = D.segments.reduce((a,s)=>a+s.revenue_at_risk_inr,0)/H.total_revenue;
+  const highRisk = segs.filter(s=>s.actual_churn_rate>=30);
+  const hrCust = highRisk.reduce((a,s)=>a+s.customers,0);
+  const premium = segs[0];
+
+  $('exec-copy').className = 'exec';
+  $('exec-copy').innerHTML = `
+    <p>The modelled base of <b>${nf(H.clean_rows)}</b> subscribers carries
+       <b>${inr(H.total_revenue)}</b> in monthly revenue, of which <b>${inr(H.revenue_at_risk)}</b>
+       (<b>${pct(riskShare)}</b>) sits with subscribers the churn model assigns elevated
+       leaving probability.</p>
+    <p>Exposure is concentrated rather than uniform. <b>${top.segment}</b> alone accounts for
+       ${inr(top.revenue_at_risk_inr)} of revenue at risk, followed by <b>${second.segment}</b>
+       at ${inr(second.revenue_at_risk_inr)}. Together the
+       ${highRisk.length} segments with churn rates above 30% hold <b>${nf(hrCust)}</b>
+       subscribers — ${pct(hrCust/H.clean_rows)} of the base.</p>
+    <p>At the opposite end, <b>${premium.segment}</b> contributes
+       ${pct(premium.monthly_revenue_inr/H.total_revenue)} of revenue from only
+       ${pct(premium.customers/H.clean_rows)} of subscribers, at a
+       ${premium.actual_churn_rate.toFixed(1)}% churn rate. The commercial priority is
+       protecting that concentration while addressing the two high-exposure segments below.</p>
+    <p>The churn model separates leavers from stayers with <b>ROC-AUC ${H.roc_auc.toFixed(4)}</b>
+       (5-fold CV ${D.cv.roc_auc_mean.toFixed(4)} ± ${D.cv.roc_auc_std.toFixed(4)}). At the
+       operating point selected in section 04 it identifies
+       <b>${pct(D.metrics_tuned.recall)}</b> of subscribers who go on to churn.</p>`;
+
+  /* recommended actions, ordered by revenue at risk */
+  const ob = D.offer_book;
+  const rows = byRisk.map(s => {
+    const o = ob[s.segment] || {offer:'—',action:'—',priority:'—'};
+    const pri = s.actual_churn_rate >= 30 && o.priority === 'Medium' ? 'High'
+              : s.actual_churn_rate >= 30 && o.priority === 'Low' ? 'Medium' : o.priority;
+    const pc = {'Very High':'p-crit','High':'p-high','Medium':'p-mod','Low':'p-low'}[pri]||'p-na';
+    return `<tr>
+      <td style="font-weight:650">${s.segment}</td>
+      <td class="num">${nf(s.customers)}</td>
+      <td class="num">${s.actual_churn_rate.toFixed(1)}%</td>
+      <td class="num" style="font-weight:650">${inr(s.revenue_at_risk_inr)}</td>
+      <td>${o.action}</td>
+      <td style="font-size:12.5px;color:var(--slate)">${o.offer}</td>
+      <td><span class="pill ${pc}">${pri}</span></td></tr>`;
+  }).join('');
+  $('actions').innerHTML =
+    '<tr><th>Segment</th><th class="num">Subscribers</th><th class="num">Churn</th>' +
+    '<th class="num">Revenue at risk</th><th>Action</th><th>Recommended offer</th>' +
+    '<th>Priority</th></tr>' + rows;
+})();
+
+/* ---------- masthead + kpis ---------- */
+$('runbar').innerHTML = [
+  ['rows in', nf(H.raw_rows)], ['rows modelled', nf(H.clean_rows)],
+  ['model', H.best_model], ['runtime', H.runtime + 's'],
+  ['UTG / UCG', nf(H.utg) + ' / ' + nf(H.ucg)]
+].map(([k,v]) => `<span>${k} <b>${v}</b></span>`).join('');
+
+$('kpis').innerHTML = [
+  ['Subscribers modelled', nf(H.clean_rows), nf(H.dropped_aon) + ' held out by AON filter'],
+  ['Segments', H.n_segments, 'GMM, diag covariance'],
+  ['Base churn rate', pct(H.churn_base_rate,2), 'positives in the base'],
+  ['ROC-AUC', H.roc_auc.toFixed(4), 'PR-AUC ' + H.pr_auc.toFixed(4)],
+  ['Monthly revenue', inr(H.total_revenue), 'across the modelled base'],
+  ['Revenue at risk', inr(H.revenue_at_risk), 'Σ revenue × P(churn)']
+].map(([l,v,s]) => `<div class="kpi"><div class="lab">${l}</div>
+   <div class="val">${v}</div><div class="sub">${s}</div></div>`).join('');
+
+/* ---------- 01 lineage ---------- */
+const cr = D.cleaning_report;
+$('clean-tbl').innerHTML = '<tr><th>Cleaning step</th><th class="num">Rows</th></tr>' +
+  Object.entries(cr).map(([k,v]) => {
+    const nm = k.replace(/_/g,' ').replace(/^\w/,c=>c.toUpperCase());
+    const strong = (k==='rows_in'||k==='rows_out');
+    return `<tr><td${strong?' style="font-weight:650"':''}>${nm}</td>
+            <td class="num"${strong?' style="font-weight:650"':''}>${nf(v)}</td></tr>`;
+  }).join('');
+
+(function(){
+  const body = Object.entries(D.outlier_caps).map(([k,v]) =>
+    `<tr><td>${k.replace(/_/g,' ')}</td><td class="num">${v.low.toFixed(2)}</td>
+     <td class="num">${v.high.toFixed(2)}</td><td class="num">${nf(v.n_capped)}</td></tr>`).join('');
+  $('capt-tbl').innerHTML =
+    '<tr><th>Outlier fence</th><th class="num">Low</th><th class="num">High</th>' +
+    '<th class="num">Capped</th></tr>' + body;
+})();
+
+/* ---------- 02 elbow chart ---------- */
+(function(){
+  const s = D.k_sweep, W=520,Hh=280, P={l:52,r:44,t:18,b:34};
+  const iw = W-P.l-P.r, ih = Hh-P.t-P.b;
+  const ks = s.map(d=>d.k), inr_=s.map(d=>d.inertia), sil=s.map(d=>d.silhouette);
+  const xk = k => P.l + (k-ks[0])/(ks[ks.length-1]-ks[0])*iw;
+  const y1 = v => P.t + ih - (v-Math.min(...inr_))/(Math.max(...inr_)-Math.min(...inr_))*ih;
+  const smin=Math.min(...sil)-0.02, smax=Math.max(...sil)+0.02;
+  const y2 = v => P.t + ih - (v-smin)/(smax-smin)*ih;
+  let g='';
+  g += `<line x1="${P.l}" y1="${P.t+ih}" x2="${P.l+iw}" y2="${P.t+ih}" stroke="#E2E8F0"/>`;
+  ks.forEach(k=>{ g+=`<text x="${xk(k)}" y="${P.t+ih+18}" text-anchor="middle">${k}</text>`;});
+  g += `<text x="${W/2}" y="${Hh-3}" text-anchor="middle">k</text>`;
+  g += `<polyline fill="none" stroke="#0B1F3A" stroke-width="2" points="${
+        s.map(d=>xk(d.k)+','+y1(d.inertia)).join(' ')}"/>`;
+  g += `<polyline fill="none" stroke="#1B6CE8" stroke-width="2" stroke-dasharray="0" points="${
+        s.map(d=>xk(d.k)+','+y2(d.silhouette)).join(' ')}"/>`;
+  s.forEach(d=>{ g+=`<circle cx="${xk(d.k)}" cy="${y1(d.inertia)}" r="3" fill="#0B1F3A"/>
+                    <circle cx="${xk(d.k)}" cy="${y2(d.silhouette)}" r="3" fill="#1B6CE8"/>`;});
+  g += `<line x1="${xk(D.elbow_k)}" y1="${P.t}" x2="${xk(D.elbow_k)}" y2="${P.t+ih}"
+         stroke="#B3202C" stroke-dasharray="4 3"/>
+        <text x="${xk(D.elbow_k)+5}" y="${P.t+11}" fill="#B3202C">elbow k=${D.elbow_k}</text>`;
+  g += `<line x1="${xk(6)}" y1="${P.t}" x2="${xk(6)}" y2="${P.t+ih}"
+         stroke="#1B7A4B" stroke-dasharray="4 3"/>
+        <text x="${xk(6)+5}" y="${P.t+ih-6}" fill="#1B7A4B">shipped k=6</text>`;
+  $('elbow').innerHTML = g;
+})();
+
+/* ---------- 02 cluster table ---------- */
+(function(){
+  const km=D.cluster_eval.kmeans, gm=D.cluster_eval.gmm;
+  const row=(n,a,b,better)=>{
+    const aw = better==='hi' ? a>b : a<b;
+    return `<tr><td>${n}</td>
+      <td class="num${aw?' win':''}">${a.toFixed(4)}</td>
+      <td class="num${!aw?' win':''}">${b.toFixed(4)}</td></tr>`;
+  };
+  $('clust-tbl').innerHTML =
+    '<tr><th>Metric</th><th class="num">K-Means</th><th class="num">GMM</th></tr>' +
+    row('Silhouette ↑', km.silhouette, gm.silhouette,'hi') +
+    row('Davies–Bouldin ↓', km.davies_bouldin, gm.davies_bouldin,'lo') +
+    row('Calinski–Harabasz ↑', km.calinski_harabasz/1000, gm.calinski_harabasz/1000,'hi') +
+    `<tr><td>BIC ↓</td><td class="num" style="color:var(--mute)">n/a</td>
+      <td class="num">${nf(Math.round(gm.bic))}</td></tr>
+     <tr><td>Soft assignment</td><td class="num" style="color:var(--mute)">no</td>
+      <td class="num win">yes</td></tr>
+     <tr><td>Agreement</td><td class="num" colspan="2">${pct(D.kmeans_gmm_agreement,2)} best 1–1 match</td></tr>
+     <tr><td>Mean GMM confidence</td><td class="num" colspan="2">${D.mean_gmm_confidence.toFixed(4)}
+      · ${nf(D.low_confidence)} below 0.60</td></tr>`;
+  document.querySelectorAll('#clust-tbl tr')[3].querySelectorAll('.num').forEach(td=>{
+    if(td.textContent.includes('.')) td.textContent = td.textContent + 'k';
+  });
+})();
+
+/* ---------- 03 segments ---------- */
+(function(){
+  const segs = D.segments, maxRev = Math.max(...segs.map(s=>s.avg_revenue));
+  const risk = r => r<.1?'p-low':r<.35?'p-mod':r<.6?'p-high':'p-crit';
+  $('segs').innerHTML = segs.map((s,i)=>`
+    <div class="seg">
+      <div class="rank">RANK ${i+1} · ${pct(s.pct_of_base/100)} OF BASE</div>
+      <h3>${s.segment}</h3>
+      <div class="bar"><i style="width:${(s.avg_revenue/maxRev*100).toFixed(1)}%"></i></div>
+      <div class="row"><span>Customers</span><b>${nf(s.customers)}</b></div>
+      <div class="row"><span>Avg revenue</span><b>₹${s.avg_revenue.toFixed(0)}</b></div>
+      <div class="row"><span>Avg data</span><b>${s.avg_data_gb.toFixed(1)} GB</b></div>
+      <div class="row"><span>Days of usage</span><b>${s.avg_dou.toFixed(1)} / 30</b></div>
+      <div class="row"><span>Tenure</span><b>${nf(Math.round(s.avg_aon_days))} d</b></div>
+      <div class="row"><span>Pack penetration</span><b>${s.pack_penetration.toFixed(0)}%</b></div>
+      <div class="row"><span>Actual churn</span>
+        <b><span class="pill ${risk(s.actual_churn_rate/100)}">${s.actual_churn_rate.toFixed(1)}%</span></b></div>
+      <div class="row"><span>Revenue at risk</span><b>${inr(s.revenue_at_risk_inr)}</b></div>
+      <div class="row"><span>UCG holdout</span><b>${nf(s.ucg_count)}</b></div>
+    </div>`).join('');
+})();
+
+/* ---------- 04 threshold lab ---------- */
+const G = D.threshold_grid;
+$('tsize').textContent = nf(H.test_positives + H.test_negatives);
+$('brate').textContent = pct(H.churn_base_rate,2);
+$('dumbacc').textContent = pct(H.test_negatives/(H.test_positives+H.test_negatives),2);
+$('prauc').textContent = H.pr_auc.toFixed(4);
+$('m-auc').textContent = H.roc_auc.toFixed(4);
+
+/* ROC static curve */
+(function(){
+  const W=520,Hh=300,P={l:46,r:16,t:14,b:38};
+  const iw=W-P.l-P.r, ih=Hh-P.t-P.b;
+  const X=v=>P.l+v*iw, Y=v=>P.t+ih-v*ih;
+  let g=`<rect x="${P.l}" y="${P.t}" width="${iw}" height="${ih}" fill="#0F2748"/>`;
+  for(let i=0;i<=4;i++){ const v=i/4;
+    g+=`<line x1="${X(0)}" y1="${Y(v)}" x2="${X(1)}" y2="${Y(v)}" stroke="#1B3557"/>
+        <text x="${P.l-8}" y="${Y(v)+3}" text-anchor="end" fill="#6E86A3">${v.toFixed(2)}</text>
+        <text x="${X(v)}" y="${P.t+ih+16}" text-anchor="middle" fill="#6E86A3">${v.toFixed(2)}</text>`;}
+  g+=`<line x1="${X(0)}" y1="${Y(0)}" x2="${X(1)}" y2="${Y(1)}" stroke="#3C5C86" stroke-dasharray="4 3"/>`;
+  g+=`<polyline fill="none" stroke="#7FB0FF" stroke-width="2.2" points="${
+      D.roc.map(p=>X(p.fpr)+','+Y(p.tpr)).join(' ')}"/>`;
+  g+=`<text x="${X(0.5)}" y="${Hh-4}" text-anchor="middle" fill="#8FA6C0">false positive rate</text>`;
+  g+=`<circle id="oppt" cx="0" cy="0" r="6" fill="#fff" stroke="#0B1F3A" stroke-width="2"/>`;
+  $('roc').innerHTML=g;
+  window.__roc={X,Y};
+})();
+
+function render(i){
+  const r = G[i];
+  $('thrv').textContent = r.t.toFixed(2);
+  $('c-tn').textContent = nf(r.tn); $('c-fp').textContent = nf(r.fp);
+  $('c-fn').textContent = nf(r.fn); $('c-tp').textContent = nf(r.tp);
+  $('m-prec').textContent = pct(r.precision,1);
+  $('m-rec').textContent  = pct(r.recall,1);
+  $('m-f1').textContent   = r.f1.toFixed(3);
+  $('m-acc').textContent  = pct(r.accuracy,1);
+  $('m-spec').textContent = pct(r.specificity,1);
+  $('l-contact').textContent = nf(r.contacted);
+  $('l-caught').textContent  = nf(r.tp);
+  $('l-missed').textContent  = nf(r.fn);
+  $('l-save').textContent    = inr(r.rev_saved_ceiling);
+  $('l-waste').textContent   = inr(r.rev_wasted);
+  const fpr = r.fp/(r.fp+r.tn), tpr = r.recall;
+  const c = document.getElementById('oppt');
+  c.setAttribute('cx', window.__roc.X(fpr)); c.setAttribute('cy', window.__roc.Y(tpr));
+}
+$('thr').addEventListener('input', e => render(+e.target.value - 1));
+render(49);
+
+/* ---------- 05 model comparison ---------- */
+(function(){
+  const mc = D.model_comparison, best = H.best_model;
+  $('mcomp').innerHTML = '<tr><th>Candidate</th><th class="num">ROC-AUC</th>' +
+    '<th class="num">Accuracy</th><th class="num">F1</th></tr>' +
+    Object.entries(mc).map(([n,m]) => `<tr><td>${n.replace(/_/g,' ')}
+      ${n===best?'<span class="pill p-low" style="margin-left:7px">selected</span>':''}</td>
+      <td class="num${n===best?' win':''}">${m.auc.toFixed(4)}</td>
+      <td class="num">${m.accuracy.toFixed(4)}</td>
+      <td class="num">${m.f1.toFixed(4)}</td></tr>`).join('');
+  const cv = D.cv;
+  $('cvline').innerHTML = `<b>${cv.folds}-fold CV</b> on ${nf(cv.cv_rows)} rows —
+    ROC-AUC <b>${cv.roc_auc_mean.toFixed(4)} ± ${cv.roc_auc_std.toFixed(4)}</b>,
+    F1 <b>${cv.f1_mean.toFixed(4)} ± ${cv.f1_std.toFixed(4)}</b>.
+    The narrow spread across folds indicates the ${H.roc_auc.toFixed(4)} test AUC reflects
+    stable model behaviour rather than a favourable split.`;
+})();
+
+/* ---------- 05 feature importance ---------- */
+(function(){
+  const fi = Object.entries(D.feature_importance).slice(0,10);
+  const mx = Math.max(...fi.map(f=>f[1]));
+  $('fimp').innerHTML = fi.map(([n,v]) => `<div class="fi-row">
+    <div class="n">${n.replace(/_/g,' ')}</div>
+    <div class="b"><i style="width:${(v/mx*100).toFixed(1)}%"></i></div>
+    <div class="v">${v.toFixed(3)}</div></div>`).join('');
+})();
+
+/* ---------- 06 surrogate ---------- */
+(function(){
+  const S=D.surrogate, L=S.labels, C_=S.confusion_matrix;
+  const rowSums = C_.map(r=>r.reduce((a,b)=>a+b,0));
+  let h = '<tr><th class="rowh" style="border-bottom:1px solid var(--rule)">actual ╲ predicted</th>' +
+    L.map(l=>`<th class="colh">${l}</th>`).join('') + '</tr>';
+  C_.forEach((row,i)=>{
+    h += `<tr><th class="rowh">${L[i]}</th>` + row.map((v,j)=>{
+      const p = v/rowSums[i];
+      const bg = i===j ? `rgba(11,31,58,${0.25+0.75*p})` : `rgba(179,32,44,${Math.min(0.85,p*9+0.06)})`;
+      const col = (i===j&&p>0.4)||(i!==j&&p>0.09) ? '#fff' : '#16202C';
+      return `<td style="background:${bg};color:${col}">${v}</td>`;
+    }).join('') + '</tr>';
+  });
+  $('heat').innerHTML = h;
+  $('surr-tbl').innerHTML = '<tr><th>Fidelity metric</th><th class="num">Value</th></tr>' +
+    [['Accuracy',S.accuracy],['Macro precision',S.macro_precision],
+     ['Macro recall',S.macro_recall],['Macro F1',S.macro_f1],["Cohen's κ",S.kappa]]
+    .map(([k,v])=>`<tr><td>${k}</td><td class="num">${v.toFixed(4)}</td></tr>`).join('');
+})();
+
+/* ---------- 07 balance ---------- */
+(function(){
+  const b=D.ucg_balance;
+  $('balhint').textContent = b.every(r=>r.balanced)
+    ? 'All |SMD| < 0.10 — randomisation holds' : 'Imbalance detected';
+  $('bal-tbl').innerHTML = '<tr><th>Covariate</th><th class="num">UTG mean</th>' +
+    '<th class="num">UCG mean</th><th class="num">|SMD|</th><th>Balanced</th></tr>' +
+    b.map(r=>`<tr><td>${r.feature.replace(/_/g,' ')}</td>
+      <td class="num">${r.utg_mean.toFixed(4)}</td>
+      <td class="num">${r.ucg_mean.toFixed(4)}</td>
+      <td class="num">${r.abs_smd.toFixed(4)}</td>
+      <td><span class="pill ${r.balanced?'p-low':'p-high'}">${r.balanced?'yes':'NO'}</span></td></tr>`).join('');
+})();
+
+/* ---------- 08 samples ---------- */
+(function(){
+  const cls = {Low:'p-low',Moderate:'p-mod',High:'p-high',Critical:'p-crit'};
+  $('samp').innerHTML = '<tr><th>Case</th><th>Segment</th><th class="num">Conf.</th>' +
+    '<th>Runner-up</th><th class="num">P(churn)</th><th>Risk</th><th>Offer</th></tr>' +
+    D.samples.map(s=>`<tr>
+      <td style="font-family:var(--mono);font-size:11.5px">${s.case_id}</td>
+      <td style="font-weight:600">${s.segment}</td>
+      <td class="num">${(+s.segment_confidence).toFixed(3)}</td>
+      <td style="color:var(--slate)">${s.runner_up_segment}
+        <span style="color:var(--mute);font-size:11px">(${(+s.runner_up_confidence).toFixed(3)})</span></td>
+      <td class="num">${(+s.churn_probability).toFixed(3)}</td>
+      <td><span class="pill ${cls[s.risk_band]||'p-na'}">${s.risk_band}</span></td>
+      <td style="font-size:12.5px;color:var(--slate)">${s.offer}</td></tr>`).join('');
+})();
+</script>
+</body>
+</html>

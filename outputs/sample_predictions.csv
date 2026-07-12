@@ -1,0 +1,11 @@
+case_id,segment,segment_confidence,runner_up_segment,runner_up_confidence,churn_probability,churn_prediction,risk_band,offer,rationale
+HIGH_VALUE_WHALE,Premium Power,0.9999662973481539,Loyal Core,3.370265184611831e-05,0.018377196620154378,0,Low,Priority 5G + concierge retention call,textbook Premium Power
+LOYAL_LONG_TENURE,Loyal Core,0.9995174886277208,Premium Power,0.00044352080096596205,0.016504432409064178,0,Low,"Loyalty tier upgrade, 12-month lock-in",textbook Loyal Core
+HEAVY_DATA_LOW_SPEND,Sleeping Giant,0.9999999999999993,Comfortably Numb,6.983529628926068e-16,0.3525774650243319,0,Moderate,Data-to-revenue upsell: unlimited plan,Sleeping Giant: upsell target
+PACK_HOPPER,Deal Seeker,0.9645885073839315,Loyal Core,0.033576301278881,0.44623708787372707,0,Moderate,"Margin-safe bundle, no discount stacking",textbook Deal Seeker
+ERRATIC_LOW_ENGAGE,Question Mark,0.9971776467496895,Deal Seeker,0.002822247554336926,0.5423315897485266,1,High,Onboarding nudge + 3-day trial pack,textbook Question Mark
+DORMANT_STICKY,Comfortably Numb,0.999999950327472,Sleeping Giant,4.967252781957945e-08,0.5585767156674997,1,High,"Low-cost reactivation SMS, no spend",textbook Comfortably Numb
+BORDERLINE_MIDFIELD,Loyal Core,0.6270256674139639,Deal Seeker,0.37296907268622015,0.27823335782535863,0,Moderate,"Loyalty tier upgrade, 12-month lock-in",sits between two clusters
+BRAND_NEW_SIM,UNSEGMENTED (AON < 90d),0.9497916443279156,Loyal Core,0.049806268950884254,0.49754954585881295,0,Moderate,Hold - insufficient tenure,AON=30d -> must be refused
+CORPORATE_IOT_SIM,Premium Power,0.8474680830190153,Loyal Core,0.15253191698098437,0.09686435049530001,0,Low,Priority 5G + concierge retention call,extreme usage -> fence must cap
+CREDIT_ADJUSTED,Question Mark,0.9951944198764062,Loyal Core,0.003906075825662683,0.5630027238978474,1,High,Onboarding nudge + 3-day trial pack,negative revenue -> must floor

@@ -1,0 +1,17 @@
+# Language detection. The rendered dashboard is a build artifact, not source;
+# without this, GitHub Linguist reports the repository as majority-HTML because
+# dashboard.html outweighs the Python it was generated from.
+outputs/dashboard.html linguist-documentation
+docs/index.html        linguist-documentation
+dashboard_template.html linguist-vendored=false linguist-detectable=true
+
+# Committed run artifacts are evidence, not source.
+outputs/*.csv  linguist-generated
+outputs/*.json linguist-generated
+figures/*.png  linguist-generated
+
+# Normalise line endings so Windows contributors do not produce noise diffs.
+* text=auto eol=lf
+*.png binary
+*.joblib binary
+*.pkl binary

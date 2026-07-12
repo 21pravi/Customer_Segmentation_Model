@@ -1,0 +1,34 @@
+[project]
+name = "telecom-segmentation"
+version = "1.0.0"
+description = "Telecom subscriber segmentation (K-Means + GMM) with churn classification and a randomised control-group design"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Praviveek Ray" }]
+keywords = ["clustering", "gaussian-mixture", "churn", "telecom", "segmentation"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = ["dashboard_template.html"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = [
+    # Compact plotting blocks use semicolons deliberately: `plt.xlabel(...);
+    # plt.ylabel(...)` keeps a figure definition readable as one visual unit.
+    "E702",
+    # `import matplotlib; matplotlib.use("Agg")` must run before pyplot is
+    # imported, so module-level imports cannot all sit at the top of the file.
+    "E402",
+    "E401",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Test fixtures shadow their own names by design.
+"tests/*" = ["F811"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

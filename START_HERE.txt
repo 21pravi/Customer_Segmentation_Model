@@ -1,0 +1,55 @@
+════════════════════════════════════════════════════════════════════════
+  READ THIS FIRST  —  60-second setup
+════════════════════════════════════════════════════════════════════════
+
+This folder is the complete, correct project structure. Upload it to GitHub
+exactly as-is (do NOT zip it again, do NOT flatten it).
+
+────────────────────────────────────────────────────────────────────────
+This zip is pre-configured for the repo name  Customer_Segmentation_Model
+────────────────────────────────────────────────────────────────────────
+The dashboard link inside README.md already points to:
+    https://21pravi.github.io/Customer_Segmentation_Model/
+
+That is correct AS LONG AS your GitHub repo keeps this exact name. If you
+ever rename the repo, update the two URLs in README.md to match (search
+for "Customer_Segmentation_Model" and replace with the new name), or the
+live-dashboard link will 404 again — that is what happened last time.
+
+────────────────────────────────────────────────────────────────────────
+UPLOAD  (choose ONE method)
+────────────────────────────────────────────────────────────────────────
+
+METHOD 1 — command line (recommended)
+    cd Customer_Segmentation_Model
+    bash check_before_push.sh          # optional sanity check
+    git init
+    git branch -M main
+    git add .
+    git commit -m "Telecom subscriber segmentation and churn pipeline"
+    git remote add origin https://github.com/21pravi/Customer_Segmentation_Model.git
+    git push -u origin main
+
+METHOD 2 — GitHub web upload
+    On the empty repo page: "uploading an existing file".
+    Then DRAG THE FOLDERS (src, docs, tests, .github, figures, outputs)
+    together with the loose files. GitHub preserves folder structure on
+    drag-and-drop. Do not upload a zip.
+
+────────────────────────────────────────────────────────────────────────
+TURN ON THE LIVE DASHBOARD
+────────────────────────────────────────────────────────────────────────
+    Settings → Pages
+    Source: Deploy from a branch
+    Branch: main   /   Folder: /docs
+    Save.  Wait ~1 minute.
+    Live at: https://21pravi.github.io/Customer_Segmentation_Model/
+
+────────────────────────────────────────────────────────────────────────
+DO NOT ADD THIS FILE'S COMPANION:  INTERVIEW_NOTES.md
+────────────────────────────────────────────────────────────────────────
+It is intentionally NOT in this zip — it is your private prep and must
+stay off GitHub. Keep your local copy from the earlier delivery.
+
+Full details: DEPLOY.md  and  PUBLISHING.md
+════════════════════════════════════════════════════════════════════════

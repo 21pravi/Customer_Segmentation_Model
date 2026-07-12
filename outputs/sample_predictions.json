@@ -1,0 +1,112 @@
+[
+  {
+    "case_id": "HIGH_VALUE_WHALE",
+    "segment": "Premium Power",
+    "segment_confidence": 0.9999662973481539,
+    "runner_up_segment": "Loyal Core",
+    "runner_up_confidence": 3.370265184611831e-05,
+    "churn_probability": 0.018377196620154378,
+    "churn_prediction": 0,
+    "risk_band": "Low",
+    "offer": "Priority 5G + concierge retention call"
+  },
+  {
+    "case_id": "LOYAL_LONG_TENURE",
+    "segment": "Loyal Core",
+    "segment_confidence": 0.9995174886277208,
+    "runner_up_segment": "Premium Power",
+    "runner_up_confidence": 0.00044352080096596205,
+    "churn_probability": 0.016504432409064178,
+    "churn_prediction": 0,
+    "risk_band": "Low",
+    "offer": "Loyalty tier upgrade, 12-month lock-in"
+  },
+  {
+    "case_id": "HEAVY_DATA_LOW_SPEND",
+    "segment": "Sleeping Giant",
+    "segment_confidence": 0.9999999999999993,
+    "runner_up_segment": "Comfortably Numb",
+    "runner_up_confidence": 6.983529628926068e-16,
+    "churn_probability": 0.3525774650243319,
+    "churn_prediction": 0,
+    "risk_band": "Moderate",
+    "offer": "Data-to-revenue upsell: unlimited plan"
+  },
+  {
+    "case_id": "PACK_HOPPER",
+    "segment": "Deal Seeker",
+    "segment_confidence": 0.9645885073839315,
+    "runner_up_segment": "Loyal Core",
+    "runner_up_confidence": 0.033576301278881,
+    "churn_probability": 0.44623708787372707,
+    "churn_prediction": 0,
+    "risk_band": "Moderate",
+    "offer": "Margin-safe bundle, no discount stacking"
+  },
+  {
+    "case_id": "ERRATIC_LOW_ENGAGE",
+    "segment": "Question Mark",
+    "segment_confidence": 0.9971776467496895,
+    "runner_up_segment": "Deal Seeker",
+    "runner_up_confidence": 0.002822247554336926,
+    "churn_probability": 0.5423315897485266,
+    "churn_prediction": 1,
+    "risk_band": "High",
+    "offer": "Onboarding nudge + 3-day trial pack"
+  },
+  {
+    "case_id": "DORMANT_STICKY",
+    "segment": "Comfortably Numb",
+    "segment_confidence": 0.999999950327472,
+    "runner_up_segment": "Sleeping Giant",
+    "runner_up_confidence": 4.967252781957945e-08,
+    "churn_probability": 0.5585767156674997,
+    "churn_prediction": 1,
+    "risk_band": "High",
+    "offer": "Low-cost reactivation SMS, no spend"
+  },
+  {
+    "case_id": "BORDERLINE_MIDFIELD",
+    "segment": "Loyal Core",
+    "segment_confidence": 0.6270256674139639,
+    "runner_up_segment": "Deal Seeker",
+    "runner_up_confidence": 0.37296907268622015,
+    "churn_probability": 0.27823335782535863,
+    "churn_prediction": 0,
+    "risk_band": "Moderate",
+    "offer": "Loyalty tier upgrade, 12-month lock-in"
+  },
+  {
+    "case_id": "BRAND_NEW_SIM",
+    "segment": "UNSEGMENTED (AON < 90d)",
+    "segment_confidence": 0.9497916443279156,
+    "runner_up_segment": "Loyal Core",
+    "runner_up_confidence": 0.049806268950884254,
+    "churn_probability": 0.49754954585881295,
+    "churn_prediction": 0,
+    "risk_band": "Moderate",
+    "offer": "Hold - insufficient tenure"
+  },
+  {
+    "case_id": "CORPORATE_IOT_SIM",
+    "segment": "Premium Power",
+    "segment_confidence": 0.8474680830190153,
+    "runner_up_segment": "Loyal Core",
+    "runner_up_confidence": 0.15253191698098437,
+    "churn_probability": 0.09686435049530001,
+    "churn_prediction": 0,
+    "risk_band": "Low",
+    "offer": "Priority 5G + concierge retention call"
+  },
+  {
+    "case_id": "CREDIT_ADJUSTED",
+    "segment": "Question Mark",
+    "segment_confidence": 0.9951944198764062,
+    "runner_up_segment": "Loyal Core",
+    "runner_up_confidence": 0.003906075825662683,
+    "churn_probability": 0.5630027238978474,
+    "churn_prediction": 1,
+    "risk_band": "High",
+    "offer": "Onboarding nudge + 3-day trial pack"
+  }
+]

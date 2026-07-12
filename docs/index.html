@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Subscriber Segmentation &amp; Churn Console</title>
+<style>
+  :root{
+    --navy:#0B1F3A; --azure:#1B6CE8; --azure-soft:#E8F0FE;
+    --ink:#16202C; --slate:#5A6B80; --mute:#8A99AC;
+    --rule:#E2E8F0; --paper:#FFFFFF; --wash:#F7F9FC;
+    --jade:#1B7A4B; --amber:#C77700; --crimson:#B3202C;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--wash);color:var(--ink);font-family:var(--sans);
+       font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px 80px}
+
+  /* ---------- masthead ---------- */
+  .mast{background:var(--navy);color:#fff;margin-bottom:34px;
+        border-bottom:3px solid var(--azure)}
+  .mast-in{max-width:1180px;margin:0 auto;padding:34px 24px 30px}
+  .eyebrow{font:600 11px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+           color:#7FB0FF;margin-bottom:14px}
+  .mast h1{margin:0;font-size:clamp(28px,4vw,44px);line-height:1.04;font-weight:800;
+           letter-spacing:-.025em}
+  .mast h1 span{color:#7FB0FF}
+  .mast p{margin:12px 0 0;max-width:62ch;color:#B8C7DA;font-size:15px}
+  .runbar{margin-top:22px;display:flex;flex-wrap:wrap;gap:10px 26px;
+          font:500 12px/1 var(--mono);color:#8FA6C0}
+  .runbar b{color:#fff;font-weight:600}
+
+  /* ---------- kpi ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:1px;
+        background:var(--rule);border:1px solid var(--rule);border-radius:8px;
+        overflow:hidden;margin-bottom:44px}
+  .kpi{background:var(--paper);padding:18px 18px 16px}
+  .kpi .lab{font:600 10px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+            color:var(--mute);margin-bottom:9px}
+  .kpi .val{font:700 27px/1 var(--sans);letter-spacing:-.02em;
+            font-variant-numeric:tabular-nums}
+  .kpi .sub{font-size:11.5px;color:var(--slate);margin-top:5px}
+
+  /* ---------- sections ---------- */
+  section{margin-bottom:52px}
+  .shead{display:flex;align-items:baseline;gap:14px;padding-bottom:11px;
+         border-bottom:2px solid var(--navy);margin-bottom:22px}
+  .snum{font:700 12px/1 var(--mono);color:var(--azure);letter-spacing:.08em;
+        padding-top:4px;flex:none}
+  .shead h2{margin:0;font-size:21px;font-weight:750;letter-spacing:-.018em}
+  .shead .hint{margin-left:auto;font-size:12.5px;color:var(--slate);text-align:right}
+
+  .card{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:20px 22px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:860px){.grid2,.grid3{grid-template-columns:1fr}}
+
+  /* ---------- tables ---------- */
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;font:600 10px/1.4 var(--mono);letter-spacing:.08em;
+     text-transform:uppercase;color:var(--mute);padding:0 10px 9px 0;
+     border-bottom:1px solid var(--rule);white-space:nowrap}
+  td{padding:9px 10px 9px 0;border-bottom:1px solid #F0F3F7;
+     font-variant-numeric:tabular-nums}
+  tr:last-child td{border-bottom:none}
+  .num{text-align:right;font-family:var(--mono);font-size:12.5px}
+  .win{color:var(--jade);font-weight:650}
+  .bad{color:var(--crimson)}
+  .pill{display:inline-block;padding:2px 8px;border-radius:20px;font:600 10.5px/1.6 var(--mono);
+        letter-spacing:.03em}
+  .p-low{background:#E7F4EC;color:var(--jade)}
+  .p-mod{background:#FDF2E0;color:var(--amber)}
+  .p-high{background:#FBE9EA;color:var(--crimson)}
+  .p-crit{background:var(--crimson);color:#fff}
+  .p-na{background:#EEF1F5;color:var(--slate)}
+
+  /* ---------- segment cards ---------- */
+  .segs{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+  .seg{background:var(--paper);border:1px solid var(--rule);border-left:4px solid var(--azure);
+       border-radius:6px;padding:16px 18px}
+  .seg h3{margin:0 0 2px;font-size:16px;font-weight:700;letter-spacing:-.01em}
+  .seg .rank{font:600 10px/1 var(--mono);color:var(--mute);letter-spacing:.1em}
+  .seg .row{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;
+            color:var(--slate)}
+  .seg .row b{color:var(--ink);font-family:var(--mono);font-size:12px}
+  .bar{height:5px;background:#EDF1F6;border-radius:3px;overflow:hidden;margin:11px 0 9px}
+  .bar i{display:block;height:100%;background:var(--azure)}
+
+  /* ---------- threshold lab (signature) ---------- */
+  .lab-wrap{background:var(--navy);border-radius:10px;padding:26px 26px 24px;color:#fff}
+  .lab-wrap h3{margin:0 0 4px;font-size:17px;font-weight:700;color:#fff}
+  .lab-wrap .cap{color:#9FB4CC;font-size:13px;margin:0 0 20px;max-width:70ch}
+  .dial{display:flex;align-items:center;gap:18px;margin-bottom:8px}
+  .dial input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:5px;
+      border-radius:4px;background:linear-gradient(90deg,#2C6FD1,#7FB0FF);outline:none}
+  .dial input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;
+      border-radius:50%;background:#fff;border:3px solid var(--azure);cursor:pointer}
+  .dial input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;
+      background:#fff;border:3px solid var(--azure);cursor:pointer}
+  .dial input[type=range]:focus-visible{box-shadow:0 0 0 3px #7FB0FF66}
+  .tval{font:700 30px/1 var(--mono);color:#fff;min-width:104px;text-align:right;
+        font-variant-numeric:tabular-nums}
+  .ticks{display:flex;justify-content:space-between;font:500 10px/1 var(--mono);
+         color:#6E86A3;margin-bottom:24px}
+  .lab-grid{display:grid;grid-template-columns:300px 1fr;gap:26px}
+  @media(max-width:900px){.lab-grid{grid-template-columns:1fr}}
+
+  .cm{display:grid;grid-template-columns:78px 1fr 1fr;gap:4px;font:600 11px/1 var(--mono)}
+  .cm div{padding:14px 8px;text-align:center;border-radius:4px}
+  .cm .hdr{background:transparent;color:#8FA6C0;display:flex;align-items:center;
+           justify-content:center;font-size:9.5px;letter-spacing:.06em}
+  .cm .cell{background:#12325A;color:#fff}
+  .cm .cell b{display:block;font-size:19px;font-weight:700;margin-bottom:3px;
+              font-variant-numeric:tabular-nums}
+  .cm .cell small{color:#8FA6C0;font-size:9px;letter-spacing:.06em}
+  .cm .tp{background:#12503A}
+  .cm .tn{background:#12325A}
+  .cm .fp{background:#5A3A12}
+  .cm .fn{background:#5A1620}
+
+  .mets{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#1B3557;
+        border-radius:6px;overflow:hidden;margin-bottom:18px}
+  .met{background:#0F2748;padding:13px 14px}
+  .met .l{font:600 9.5px/1.3 var(--mono);letter-spacing:.09em;color:#8FA6C0;
+          text-transform:uppercase;margin-bottom:6px}
+  .met .v{font:700 21px/1 var(--sans);font-variant-numeric:tabular-nums}
+  .met .d{font-size:10.5px;color:#7E93AC;margin-top:4px}
+  .ledger{background:#0F2748;border-radius:6px;padding:15px 17px;font-size:13px;color:#B8C7DA}
+  .ledger .lr{display:flex;justify-content:space-between;padding:4px 0}
+  .ledger .lr b{font-family:var(--mono);color:#fff;font-size:12.5px}
+  .ledger .tot{border-top:1px solid #24456E;margin-top:7px;padding-top:9px}
+
+  .note{background:#FFF9E8;border:1px solid #F0DFA8;border-left:4px solid var(--amber);
+        border-radius:6px;padding:15px 18px;font-size:13.5px;margin-top:16px}
+  .note b{color:#8A5200}
+  .note code{font-family:var(--mono);font-size:12px;background:#F5EBD0;padding:1px 5px;
+             border-radius:3px}
+
+  .heat td{text-align:center;font-family:var(--mono);font-size:12px;color:#fff;
+           border:1px solid var(--paper);padding:9px 4px}
+  .heat th.rowh{text-align:right;padding-right:11px;color:var(--ink);text-transform:none;
+                font-family:var(--sans);font-size:12.5px;letter-spacing:0;font-weight:600;
+                border-bottom:none}
+  .heat th.colh{writing-mode:vertical-rl;transform:rotate(180deg);height:96px;
+                font-size:10px;text-align:left}
+
+  .fi-row{display:flex;align-items:center;gap:11px;margin-bottom:7px}
+  .fi-row .n{width:190px;font-size:12.5px;color:var(--slate);text-align:right;flex:none}
+  .fi-row .b{flex:1;height:15px;background:#EDF1F6;border-radius:3px;overflow:hidden}
+  .fi-row .b i{display:block;height:100%;background:var(--navy)}
+  .fi-row .v{width:56px;font:600 11.5px/1 var(--mono);color:var(--ink);flex:none}
+
+  .foot{border-top:1px solid var(--rule);padding-top:20px;font-size:12.5px;color:var(--slate)}
+  .prov{background:#FFF9E8;border:1px solid #F0DFA8;border-left:4px solid var(--amber);
+        border-radius:8px;padding:14px 18px;margin-bottom:26px;font-size:13px;color:#5A4A20}
+  .prov b{color:#8A5200}
+  .exec p{margin:0 0 12px}
+  .exec p:last-child{margin-bottom:0}
+  .exec b{color:var(--navy)}
+  .foot code{font-family:var(--mono);font-size:11.5px}
+  svg text{font-family:var(--mono);font-size:10px;fill:var(--mute)}
+  .lgd{display:flex;gap:18px;font-size:11.5px;color:var(--slate);margin-top:8px}
+  .lgd i{display:inline-block;width:11px;height:3px;vertical-align:middle;margin-right:6px}
+  @media(prefers-reduced-motion:no-preference){.bar i,.fi-row .b i{transition:width .35s ease}}
+</style>
+</head>
+<body>
+
+<div class="mast"><div class="mast-in">
+  <div class="eyebrow">K-Means · Gaussian Mixture · Churn Classification</div>
+  <h1>Subscriber Segmentation<br>&amp; <span>Churn Console</span></h1>
+  <p>Six behavioural segments recovered from an unlabelled subscriber base, with a supervised
+     churn model layered on top to quantify the revenue exposure attached to each. The operating
+     point in section 04 is adjustable: precision and recall trade against each other, and the
+     right cut depends on retention budget rather than on any single metric.</p>
+  <div class="runbar" id="runbar"></div>
+</div></div>
+
+<div class="wrap">
+
+  <div class="prov" id="prov"></div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <!-- 00 executive summary -->
+  <section>
+    <div class="shead"><div class="snum">00</div><h2>Executive summary</h2>
+      <div class="hint">Where the revenue exposure sits, and what to do about it</div></div>
+    <div class="card" style="margin-bottom:18px"><div id="exec-copy"></div></div>
+    <div class="card" style="overflow-x:auto"><table id="actions"></table></div>
+  </section>
+
+  <!-- 01 -->
+  <section>
+    <div class="shead"><div class="snum">01</div><h2>Data lineage</h2>
+      <div class="hint">Full reconciliation from source to model input</div></div>
+    <div class="grid2">
+      <div class="card"><table id="clean-tbl"></table></div>
+      <div class="card">
+        <table id="capt-tbl"></table>
+        <div class="note" style="margin-top:14px">
+          <b>Outlier fences use Tukey k=3.0 rather than the default 1.5.</b> On a right-skewed
+          telecom usage distribution the 1.5×IQR fence removes 2–3% of records, most of which
+          are genuine heavy-data subscribers and commercially the most interesting. The wider
+          k=3.0 fence isolates corporate and IoT SIMs specifically. Affected records are
+          winsorised rather than dropped: they represent revenue-generating subscribers and
+          belong in the segment counts, though not at their raw magnitude.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="shead"><div class="snum">02</div><h2>Choosing k</h2>
+      <div class="hint">Elbow and silhouette both say 5. Business says 6.</div></div>
+    <div class="grid2">
+      <div class="card"><svg id="elbow" viewBox="0 0 520 280" width="100%"></svg>
+        <div class="lgd"><span><i style="background:#0B1F3A"></i>Inertia (WCSS)</span>
+        <span><i style="background:#1B6CE8"></i>Silhouette</span></div></div>
+      <div class="card">
+        <table id="clust-tbl"></table>
+        <div class="note" style="margin-top:14px">
+          <b>Six segments is a business constraint, not a statistical result.</b>
+          The kneedle elbow and the silhouette peak both indicate <code>k=5</code>. We ship
+          <code>k=6</code> to match the six distinct offers the campaign supports. The cost of
+          that decision is quantified rather than hidden: silhouette falls from 0.4465 to
+          0.4156. We judged the additional actionable segment worth a 0.03 separation penalty,
+          and we would revisit the choice if the offer set changed.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section>
+    <div class="shead"><div class="snum">03</div><h2>The six segments</h2>
+      <div class="hint">Named by revenue rank for reproducibility</div></div>
+    <div class="segs" id="segs"></div>
+    <div class="note">
+      <b>Segment names are derived from revenue rank, not assigned to cluster ids.</b>
+      Mixture-model cluster ids are arbitrary and permute between runs, random seeds and
+      library versions, so a fixed id-to-name mapping would relabel the base whenever any of
+      those changed. Ranking clusters by mean revenue gives a stable, ordered business property
+      to attach names to, which keeps segment definitions reproducible across refreshes.
+    </div>
+  </section>
+
+  <!-- 04 signature -->
+  <section>
+    <div class="shead"><div class="snum">04</div><h2>Operating point</h2>
+      <div class="hint">Precision and recall trade against each other</div></div>
+    <div class="lab-wrap">
+      <h3>Selecting the classification threshold</h3>
+      <p class="cap">Held-out test set: <b id="tsize"></b> subscribers. Each count is computed
+        directly from the model's predicted probabilities at every one of 99 candidate
+        thresholds; no values are interpolated.</p>
+
+      <div class="dial">
+        <input type="range" id="thr" min="1" max="99" value="50" step="1"
+               aria-label="Classification threshold">
+        <div class="tval" id="thrv">0.50</div>
+      </div>
+      <div class="ticks"><span>0.01 · flag all</span><span>0.50</span>
+        <span>0.99 · flag none</span></div>
+
+      <div class="lab-grid">
+        <div>
+          <div class="cm">
+            <div class="hdr"></div><div class="hdr">PREDICT STAY</div><div class="hdr">PREDICT CHURN</div>
+            <div class="hdr">ACTUAL<br>STAY</div>
+            <div class="cell tn"><b id="c-tn">—</b><small>TRUE NEG</small></div>
+            <div class="cell fp"><b id="c-fp">—</b><small>FALSE POS</small></div>
+            <div class="hdr">ACTUAL<br>CHURN</div>
+            <div class="cell fn"><b id="c-fn">—</b><small>FALSE NEG</small></div>
+            <div class="cell tp"><b id="c-tp">—</b><small>TRUE POS</small></div>
+          </div>
+          <div class="ledger" style="margin-top:16px">
+            <div class="lr"><span>Customers contacted</span><b id="l-contact">—</b></div>
+            <div class="lr"><span>Churners identified</span><b id="l-caught">—</b></div>
+            <div class="lr"><span>Churners not identified</span><b id="l-missed">—</b></div>
+            <div class="lr tot"><span>Revenue reachable</span><b id="l-save">—</b></div>
+            <div class="lr"><span>Spent on non-churners</span><b id="l-waste">—</b></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="mets">
+            <div class="met"><div class="l">Precision</div><div class="v" id="m-prec">—</div>
+              <div class="d">share of flagged who do churn</div></div>
+            <div class="met"><div class="l">Recall</div><div class="v" id="m-rec">—</div>
+              <div class="d">share of churners identified</div></div>
+            <div class="met"><div class="l">F1</div><div class="v" id="m-f1">—</div>
+              <div class="d">harmonic mean of the two</div></div>
+            <div class="met"><div class="l">Accuracy</div><div class="v" id="m-acc">—</div>
+              <div class="d">see note on class balance</div></div>
+            <div class="met"><div class="l">Specificity</div><div class="v" id="m-spec">—</div>
+              <div class="d">share of stayers not contacted</div></div>
+            <div class="met"><div class="l">ROC-AUC</div><div class="v" id="m-auc">—</div>
+              <div class="d">threshold-independent</div></div>
+          </div>
+          <svg id="roc" viewBox="0 0 520 300" width="100%"></svg>
+          <div class="lgd"><span><i style="background:#7FB0FF"></i>ROC curve</span>
+            <span><i style="background:#fff;height:9px;width:9px;border-radius:50%"></i>current operating point</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>Why accuracy is not the headline metric.</b> The base churn rate is
+      <span id="brate"></span>, so a model predicting that nobody churns would score
+      <span id="dumbacc"></span> accuracy while identifying no churners and protecting no
+      revenue. Moving the dial to 0.99 reproduces exactly that. Precision, recall and PR-AUC
+      (<span id="prauc"></span>) remain informative under this class balance, which is why
+      they lead the reporting.
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section>
+    <div class="shead"><div class="snum">05</div><h2>Model selection</h2>
+      <div class="hint">Chosen on ROC-AUC, validated on 5-fold CV</div></div>
+    <div class="grid2">
+      <div class="card"><table id="mcomp"></table>
+        <div style="margin-top:14px;font-size:13px;color:var(--slate)" id="cvline"></div></div>
+      <div class="card"><div style="font:600 10px/1 var(--mono);letter-spacing:.08em;
+        text-transform:uppercase;color:var(--mute);margin-bottom:14px">Churn drivers</div>
+        <div id="fimp"></div></div>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section>
+    <div class="shead"><div class="snum">06</div><h2>Segment surrogate</h2>
+      <div class="hint">Deployment fidelity to the mixture model</div></div>
+    <div class="grid2">
+      <div class="card"><table class="heat" id="heat"></table></div>
+      <div class="card">
+        <table id="surr-tbl"></table>
+        <div class="note" style="margin-top:14px">
+          <b>This figure measures fidelity, not correctness.</b> It reports how closely a fast
+          random forest reproduces the mixture model's own decision boundary, which is what
+          allows new subscribers to be scored in milliseconds without refitting the GMM. Its
+          reference labels come from the GMM, so it should be read as a deployment-fidelity
+          check. Segmentation is unsupervised and therefore has no accuracy in the supervised
+          sense; separation quality is reported in section 02 instead.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section>
+    <div class="shead"><div class="snum">07</div><h2>Control group integrity</h2>
+      <div class="hint" id="balhint"></div></div>
+    <div class="card"><table id="bal-tbl"></table></div>
+    <div class="note">
+      <b>The control group is randomised, then verified.</b> A universal control group only
+      supports a causal read of campaign lift if membership is independent of the outcome.
+      Selecting the holdout on any quantity correlated with revenue or engagement — cluster
+      confidence, spend, tenure — produces a control that is not comparable to the treated
+      population, and biases every incrementality estimate computed against it.
+      Here the 3% holdout is drawn <em>at random within each segment</em>, so segment mix is
+      preserved while assignment inside a segment stays independent of behaviour. Balance is
+      then confirmed with standardised mean differences across all covariates; conventional
+      practice treats |SMD| &lt; 0.10 as balanced, and the largest observed value is 0.0216.
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section>
+    <div class="shead"><div class="snum">08</div><h2>Sample predictions</h2>
+      <div class="hint">Ten unseen subscribers, full scoring path</div></div>
+    <div class="card" style="overflow-x:auto"><table id="samp"></table></div>
+  </section>
+
+  <div class="foot">
+    Every figure on this page is computed from a full pipeline run and read from
+    <code>outputs/dashboard_data.json</code>. Reproduce with
+    <code>stage_a_segment.py</code> → <code>stage_b_predict.py</code> →
+    <code>predict_samples.py</code> → <code>build_dashboard_data.py</code>.
+    Methodology and assumptions are documented in <code>METHODOLOGY.md</code>.
+  </div>
+</div>
+
+<script id="payload" type="application/json">{"headline":{"raw_rows":201000,"clean_rows":195640,"dropped_aon":4360,"churn_base_rate":0.28791658147618077,"n_segments":6,"roc_auc":0.8238852488762328,"pr_auc":0.645757611837116,"total_revenue":52035400.0,"revenue_at_risk":13715928.241102194,"best_model":"random_forest","tuned_threshold":0.49778493666267726,"runtime":151.8,"utg":189771,"ucg":5869,"test_positives":11266,"test_negatives":27862},"threshold_grid":[{"t":0.01,"tp":11258,"fp":26936,"fn":8,"tn":926,"precision":0.2948,"recall":0.9993,"f1":0.4552,"accuracy":0.3114,"specificity":0.0332,"contacted":38194,"rev_saved_ceiling":1797182.0,"rev_wasted":8052266.0},{"t":0.02,"tp":11232,"fp":23796,"fn":34,"tn":4066,"precision":0.3207,"recall":0.997,"f1":0.4852,"accuracy":0.391,"specificity":0.1459,"contacted":35028,"rev_saved_ceiling":1780577.0,"rev_wasted":6118406.0},{"t":0.03,"tp":11214,"fp":21430,"fn":52,"tn":6432,"precision":0.3435,"recall":0.9954,"f1":0.5108,"accuracy":0.451,"specificity":0.2309,"contacted":32644,"rev_saved_ceiling":1769706.0,"rev_wasted":4838917.0},{"t":0.04,"tp":11201,"fp":20326,"fn":65,"tn":7536,"precision":0.3553,"recall":0.9942,"f1":0.5235,"accuracy":0.4789,"specificity":0.2705,"contacted":31527,"rev_saved_ceiling":1762867.0,"rev_wasted":4287799.0},{"t":0.05,"tp":11196,"fp":19708,"fn":70,"tn":8154,"precision":0.3623,"recall":0.9938,"f1":0.531,"accuracy":0.4945,"specificity":0.2927,"contacted":30904,"rev_saved_ceiling":1760438.0,"rev_wasted":3997751.0},{"t":0.06,"tp":11188,"fp":19324,"fn":78,"tn":8538,"precision":0.3667,"recall":0.9931,"f1":0.5356,"accuracy":0.5041,"specificity":0.3064,"contacted":30512,"rev_saved_ceiling":1757666.0,"rev_wasted":3828402.0},{"t":0.07,"tp":11184,"fp":19060,"fn":82,"tn":8802,"precision":0.3698,"recall":0.9927,"f1":0.5389,"accuracy":0.5108,"specificity":0.3159,"contacted":30244,"rev_saved_ceiling":1755965.0,"rev_wasted":3715674.0},{"t":0.08,"tp":11183,"fp":18854,"fn":83,"tn":9008,"precision":0.3723,"recall":0.9926,"f1":0.5415,"accuracy":0.516,"specificity":0.3233,"contacted":30037,"rev_saved_ceiling":1755596.0,"rev_wasted":3632086.0},{"t":0.09,"tp":11178,"fp":18707,"fn":88,"tn":9155,"precision":0.374,"recall":0.9922,"f1":0.5433,"accuracy":0.5197,"specificity":0.3286,"contacted":29885,"rev_saved_ceiling":1753564.0,"rev_wasted":3570103.0},{"t":0.1,"tp":11177,"fp":18602,"fn":89,"tn":9260,"precision":0.3753,"recall":0.9921,"f1":0.5446,"accuracy":0.5223,"specificity":0.3324,"contacted":29779,"rev_saved_ceiling":1753218.0,"rev_wasted":3530252.0},{"t":0.11,"tp":11174,"fp":18499,"fn":92,"tn":9363,"precision":0.3766,"recall":0.9918,"f1":0.5459,"accuracy":0.5249,"specificity":0.336,"contacted":29673,"rev_saved_ceiling":1752230.0,"rev_wasted":3493544.0},{"t":0.12,"tp":11172,"fp":18425,"fn":94,"tn":9437,"precision":0.3775,"recall":0.9917,"f1":0.5468,"accuracy":0.5267,"specificity":0.3387,"contacted":29597,"rev_saved_ceiling":1751214.0,"rev_wasted":3466911.0},{"t":0.13,"tp":11171,"fp":18348,"fn":95,"tn":9514,"precision":0.3784,"recall":0.9916,"f1":0.5478,"accuracy":0.5286,"specificity":0.3415,"contacted":29519,"rev_saved_ceiling":1750832.0,"rev_wasted":3440539.0},{"t":0.14,"tp":11166,"fp":18284,"fn":100,"tn":9578,"precision":0.3792,"recall":0.9911,"f1":0.5485,"accuracy":0.5302,"specificity":0.3438,"contacted":29450,"rev_saved_ceiling":1748827.0,"rev_wasted":3417561.0},{"t":0.15,"tp":11163,"fp":18218,"fn":103,"tn":9644,"precision":0.3799,"recall":0.9909,"f1":0.5493,"accuracy":0.5318,"specificity":0.3461,"contacted":29381,"rev_saved_ceiling":1747247.0,"rev_wasted":3393654.0},{"t":0.16,"tp":11162,"fp":18158,"fn":104,"tn":9704,"precision":0.3807,"recall":0.9908,"f1":0.55,"accuracy":0.5333,"specificity":0.3483,"contacted":29320,"rev_saved_ceiling":1746810.0,"rev_wasted":3372208.0},{"t":0.17,"tp":11155,"fp":18082,"fn":111,"tn":9780,"precision":0.3815,"recall":0.9901,"f1":0.5508,"accuracy":0.535,"specificity":0.351,"contacted":29237,"rev_saved_ceiling":1744283.0,"rev_wasted":3344657.0},{"t":0.18,"tp":11149,"fp":17996,"fn":117,"tn":9866,"precision":0.3825,"recall":0.9896,"f1":0.5518,"accuracy":0.5371,"specificity":0.3541,"contacted":29145,"rev_saved_ceiling":1741968.0,"rev_wasted":3311846.0},{"t":0.19,"tp":11141,"fp":17897,"fn":125,"tn":9965,"precision":0.3837,"recall":0.9889,"f1":0.5528,"accuracy":0.5394,"specificity":0.3577,"contacted":29038,"rev_saved_ceiling":1738848.0,"rev_wasted":3276516.0},{"t":0.2,"tp":11128,"fp":17794,"fn":138,"tn":10068,"precision":0.3848,"recall":0.9878,"f1":0.5538,"accuracy":0.5417,"specificity":0.3614,"contacted":28922,"rev_saved_ceiling":1734078.0,"rev_wasted":3239080.0},{"t":0.21,"tp":11117,"fp":17699,"fn":149,"tn":10163,"precision":0.3858,"recall":0.9868,"f1":0.5547,"accuracy":0.5439,"specificity":0.3648,"contacted":28816,"rev_saved_ceiling":1730344.0,"rev_wasted":3206266.0},{"t":0.22,"tp":11097,"fp":17573,"fn":169,"tn":10289,"precision":0.3871,"recall":0.985,"f1":0.5557,"accuracy":0.5466,"specificity":0.3693,"contacted":28670,"rev_saved_ceiling":1723550.0,"rev_wasted":3162294.0},{"t":0.23,"tp":11075,"fp":17431,"fn":191,"tn":10431,"precision":0.3885,"recall":0.983,"f1":0.5569,"accuracy":0.5496,"specificity":0.3744,"contacted":28506,"rev_saved_ceiling":1716362.0,"rev_wasted":3114669.0},{"t":0.24,"tp":11058,"fp":17242,"fn":208,"tn":10620,"precision":0.3907,"recall":0.9815,"f1":0.559,"accuracy":0.554,"specificity":0.3812,"contacted":28300,"rev_saved_ceiling":1710722.0,"rev_wasted":3053607.0},{"t":0.25,"tp":11027,"fp":17042,"fn":239,"tn":10820,"precision":0.3929,"recall":0.9788,"f1":0.5607,"accuracy":0.5583,"specificity":0.3883,"contacted":28069,"rev_saved_ceiling":1700914.0,"rev_wasted":2990578.0},{"t":0.26,"tp":10990,"fp":16813,"fn":276,"tn":11049,"precision":0.3953,"recall":0.9755,"f1":0.5626,"accuracy":0.5633,"specificity":0.3966,"contacted":27803,"rev_saved_ceiling":1689321.0,"rev_wasted":2921094.0},{"t":0.27,"tp":10966,"fp":16595,"fn":300,"tn":11267,"precision":0.3979,"recall":0.9734,"f1":0.5649,"accuracy":0.5682,"specificity":0.4044,"contacted":27561,"rev_saved_ceiling":1682433.0,"rev_wasted":2855385.0},{"t":0.28,"tp":10929,"fp":16392,"fn":337,"tn":11470,"precision":0.4,"recall":0.9701,"f1":0.5665,"accuracy":0.5725,"specificity":0.4117,"contacted":27321,"rev_saved_ceiling":1670502.0,"rev_wasted":2795230.0},{"t":0.29,"tp":10890,"fp":16176,"fn":376,"tn":11686,"precision":0.4023,"recall":0.9666,"f1":0.5682,"accuracy":0.577,"specificity":0.4194,"contacted":27066,"rev_saved_ceiling":1659204.0,"rev_wasted":2732742.0},{"t":0.3,"tp":10854,"fp":15971,"fn":412,"tn":11891,"precision":0.4046,"recall":0.9634,"f1":0.5699,"accuracy":0.5813,"specificity":0.4268,"contacted":26825,"rev_saved_ceiling":1648357.0,"rev_wasted":2675645.0},{"t":0.31,"tp":10802,"fp":15746,"fn":464,"tn":12116,"precision":0.4069,"recall":0.9588,"f1":0.5713,"accuracy":0.5857,"specificity":0.4349,"contacted":26548,"rev_saved_ceiling":1633495.0,"rev_wasted":2611587.0},{"t":0.32,"tp":10747,"fp":15480,"fn":519,"tn":12382,"precision":0.4098,"recall":0.9539,"f1":0.5733,"accuracy":0.5911,"specificity":0.4444,"contacted":26227,"rev_saved_ceiling":1617960.0,"rev_wasted":2542772.0},{"t":0.33,"tp":10681,"fp":15196,"fn":585,"tn":12666,"precision":0.4128,"recall":0.9481,"f1":0.5751,"accuracy":0.5967,"specificity":0.4546,"contacted":25877,"rev_saved_ceiling":1601492.0,"rev_wasted":2467299.0},{"t":0.34,"tp":10629,"fp":14922,"fn":637,"tn":12940,"precision":0.416,"recall":0.9435,"f1":0.5774,"accuracy":0.6024,"specificity":0.4644,"contacted":25551,"rev_saved_ceiling":1588233.0,"rev_wasted":2396021.0},{"t":0.35,"tp":10545,"fp":14621,"fn":721,"tn":13241,"precision":0.419,"recall":0.936,"f1":0.5789,"accuracy":0.6079,"specificity":0.4752,"contacted":25166,"rev_saved_ceiling":1567423.0,"rev_wasted":2322326.0},{"t":0.36,"tp":10469,"fp":14263,"fn":797,"tn":13599,"precision":0.4233,"recall":0.9293,"f1":0.5816,"accuracy":0.6151,"specificity":0.4881,"contacted":24732,"rev_saved_ceiling":1548377.0,"rev_wasted":2235215.0},{"t":0.37,"tp":10389,"fp":13928,"fn":877,"tn":13934,"precision":0.4272,"recall":0.9222,"f1":0.5839,"accuracy":0.6216,"specificity":0.5001,"contacted":24317,"rev_saved_ceiling":1530258.0,"rev_wasted":2159505.0},{"t":0.38,"tp":10298,"fp":13559,"fn":968,"tn":14303,"precision":0.4317,"recall":0.9141,"f1":0.5864,"accuracy":0.6287,"specificity":0.5134,"contacted":23857,"rev_saved_ceiling":1507207.0,"rev_wasted":2081097.0},{"t":0.39,"tp":10174,"fp":13161,"fn":1092,"tn":14701,"precision":0.436,"recall":0.9031,"f1":0.5881,"accuracy":0.6357,"specificity":0.5276,"contacted":23335,"rev_saved_ceiling":1481113.0,"rev_wasted":1998660.0},{"t":0.4,"tp":10045,"fp":12718,"fn":1221,"tn":15144,"precision":0.4413,"recall":0.8916,"f1":0.5904,"accuracy":0.6438,"specificity":0.5435,"contacted":22763,"rev_saved_ceiling":1454045.0,"rev_wasted":1908952.0},{"t":0.41,"tp":9900,"fp":12205,"fn":1366,"tn":15657,"precision":0.4479,"recall":0.8788,"f1":0.5933,"accuracy":0.6532,"specificity":0.5619,"contacted":22105,"rev_saved_ceiling":1424221.0,"rev_wasted":1808007.0},{"t":0.42,"tp":9745,"fp":11686,"fn":1521,"tn":16176,"precision":0.4547,"recall":0.865,"f1":0.5961,"accuracy":0.6625,"specificity":0.5806,"contacted":21431,"rev_saved_ceiling":1392584.0,"rev_wasted":1704119.0},{"t":0.43,"tp":9598,"fp":11217,"fn":1668,"tn":16645,"precision":0.4611,"recall":0.8519,"f1":0.5984,"accuracy":0.6707,"specificity":0.5974,"contacted":20815,"rev_saved_ceiling":1363728.0,"rev_wasted":1616185.0},{"t":0.44,"tp":9455,"fp":10719,"fn":1811,"tn":17143,"precision":0.4687,"recall":0.8393,"f1":0.6015,"accuracy":0.6798,"specificity":0.6153,"contacted":20174,"rev_saved_ceiling":1338578.0,"rev_wasted":1525742.0},{"t":0.45,"tp":9314,"fp":10263,"fn":1952,"tn":17599,"precision":0.4758,"recall":0.8267,"f1":0.604,"accuracy":0.6878,"specificity":0.6316,"contacted":19577,"rev_saved_ceiling":1314692.0,"rev_wasted":1446010.0},{"t":0.46,"tp":9163,"fp":9813,"fn":2103,"tn":18049,"precision":0.4829,"recall":0.8133,"f1":0.606,"accuracy":0.6955,"specificity":0.6478,"contacted":18976,"rev_saved_ceiling":1288241.0,"rev_wasted":1370793.0},{"t":0.47,"tp":9022,"fp":9398,"fn":2244,"tn":18464,"precision":0.4898,"recall":0.8008,"f1":0.6078,"accuracy":0.7025,"specificity":0.6627,"contacted":18420,"rev_saved_ceiling":1265157.0,"rev_wasted":1305731.0},{"t":0.48,"tp":8876,"fp":9006,"fn":2390,"tn":18856,"precision":0.4964,"recall":0.7879,"f1":0.609,"accuracy":0.7088,"specificity":0.6768,"contacted":17882,"rev_saved_ceiling":1242352.0,"rev_wasted":1247272.0},{"t":0.49,"tp":8726,"fp":8621,"fn":2540,"tn":19241,"precision":0.503,"recall":0.7745,"f1":0.6099,"accuracy":0.7148,"specificity":0.6906,"contacted":17347,"rev_saved_ceiling":1218828.0,"rev_wasted":1188363.0},{"t":0.5,"tp":8576,"fp":8191,"fn":2690,"tn":19671,"precision":0.5115,"recall":0.7612,"f1":0.6119,"accuracy":0.7219,"specificity":0.706,"contacted":16767,"rev_saved_ceiling":1198166.0,"rev_wasted":1124884.0},{"t":0.51,"tp":8373,"fp":7800,"fn":2893,"tn":20062,"precision":0.5177,"recall":0.7432,"f1":0.6103,"accuracy":0.7267,"specificity":0.72,"contacted":16173,"rev_saved_ceiling":1167582.0,"rev_wasted":1067544.0},{"t":0.52,"tp":8190,"fp":7382,"fn":3076,"tn":20480,"precision":0.5259,"recall":0.727,"f1":0.6103,"accuracy":0.7327,"specificity":0.7351,"contacted":15572,"rev_saved_ceiling":1138906.0,"rev_wasted":1004687.0},{"t":0.53,"tp":8001,"fp":6949,"fn":3265,"tn":20913,"precision":0.5352,"recall":0.7102,"f1":0.6104,"accuracy":0.739,"specificity":0.7506,"contacted":14950,"rev_saved_ceiling":1111000.0,"rev_wasted":938622.0},{"t":0.54,"tp":7787,"fp":6458,"fn":3479,"tn":21404,"precision":0.5466,"recall":0.6912,"f1":0.6105,"accuracy":0.746,"specificity":0.7682,"contacted":14245,"rev_saved_ceiling":1076963.0,"rev_wasted":867254.0},{"t":0.55,"tp":7554,"fp":5980,"fn":3712,"tn":21882,"precision":0.5581,"recall":0.6705,"f1":0.6092,"accuracy":0.7523,"specificity":0.7854,"contacted":13534,"rev_saved_ceiling":1041520.0,"rev_wasted":797290.0},{"t":0.56,"tp":7312,"fp":5550,"fn":3954,"tn":22312,"precision":0.5685,"recall":0.649,"f1":0.6061,"accuracy":0.7571,"specificity":0.8008,"contacted":12862,"rev_saved_ceiling":1008156.0,"rev_wasted":736882.0},{"t":0.57,"tp":7115,"fp":5151,"fn":4151,"tn":22711,"precision":0.5801,"recall":0.6315,"f1":0.6047,"accuracy":0.7623,"specificity":0.8151,"contacted":12266,"rev_saved_ceiling":981423.0,"rev_wasted":682446.0},{"t":0.58,"tp":6919,"fp":4758,"fn":4347,"tn":23104,"precision":0.5925,"recall":0.6141,"f1":0.6031,"accuracy":0.7673,"specificity":0.8292,"contacted":11677,"rev_saved_ceiling":955862.0,"rev_wasted":629533.0},{"t":0.59,"tp":6727,"fp":4388,"fn":4539,"tn":23474,"precision":0.6052,"recall":0.5971,"f1":0.6011,"accuracy":0.7719,"specificity":0.8425,"contacted":11115,"rev_saved_ceiling":931640.0,"rev_wasted":581163.0},{"t":0.6,"tp":6511,"fp":3999,"fn":4755,"tn":23863,"precision":0.6195,"recall":0.5779,"f1":0.598,"accuracy":0.7763,"specificity":0.8565,"contacted":10510,"rev_saved_ceiling":904395.0,"rev_wasted":535297.0},{"t":0.61,"tp":6272,"fp":3666,"fn":4994,"tn":24196,"precision":0.6311,"recall":0.5567,"f1":0.5916,"accuracy":0.7787,"specificity":0.8684,"contacted":9938,"rev_saved_ceiling":872982.0,"rev_wasted":493125.0},{"t":0.62,"tp":6052,"fp":3373,"fn":5214,"tn":24489,"precision":0.6421,"recall":0.5372,"f1":0.585,"accuracy":0.7805,"specificity":0.8789,"contacted":9425,"rev_saved_ceiling":845993.0,"rev_wasted":456553.0},{"t":0.63,"tp":5855,"fp":3120,"fn":5411,"tn":24742,"precision":0.6524,"recall":0.5197,"f1":0.5785,"accuracy":0.782,"specificity":0.888,"contacted":8975,"rev_saved_ceiling":822135.0,"rev_wasted":424195.0},{"t":0.64,"tp":5683,"fp":2884,"fn":5583,"tn":24978,"precision":0.6634,"recall":0.5044,"f1":0.5731,"accuracy":0.7836,"specificity":0.8965,"contacted":8567,"rev_saved_ceiling":802933.0,"rev_wasted":394946.0},{"t":0.65,"tp":5553,"fp":2718,"fn":5713,"tn":25144,"precision":0.6714,"recall":0.4929,"f1":0.5685,"accuracy":0.7845,"specificity":0.9024,"contacted":8271,"rev_saved_ceiling":787132.0,"rev_wasted":373292.0},{"t":0.66,"tp":5408,"fp":2586,"fn":5858,"tn":25276,"precision":0.6765,"recall":0.48,"f1":0.5616,"accuracy":0.7842,"specificity":0.9072,"contacted":7994,"rev_saved_ceiling":769092.0,"rev_wasted":356545.0},{"t":0.67,"tp":5277,"fp":2423,"fn":5989,"tn":25439,"precision":0.6853,"recall":0.4684,"f1":0.5565,"accuracy":0.785,"specificity":0.913,"contacted":7700,"rev_saved_ceiling":754141.0,"rev_wasted":338331.0},{"t":0.68,"tp":5176,"fp":2315,"fn":6090,"tn":25547,"precision":0.691,"recall":0.4594,"f1":0.5519,"accuracy":0.7852,"specificity":0.9169,"contacted":7491,"rev_saved_ceiling":741054.0,"rev_wasted":324390.0},{"t":0.69,"tp":5072,"fp":2202,"fn":6194,"tn":25660,"precision":0.6973,"recall":0.4502,"f1":0.5471,"accuracy":0.7854,"specificity":0.921,"contacted":7274,"rev_saved_ceiling":728708.0,"rev_wasted":310618.0},{"t":0.7,"tp":4963,"fp":2091,"fn":6303,"tn":25771,"precision":0.7036,"recall":0.4405,"f1":0.5418,"accuracy":0.7855,"specificity":0.925,"contacted":7054,"rev_saved_ceiling":714883.0,"rev_wasted":296932.0},{"t":0.71,"tp":4858,"fp":2001,"fn":6408,"tn":25861,"precision":0.7083,"recall":0.4312,"f1":0.5361,"accuracy":0.7851,"specificity":0.9282,"contacted":6859,"rev_saved_ceiling":700634.0,"rev_wasted":286829.0},{"t":0.72,"tp":4749,"fp":1914,"fn":6517,"tn":25948,"precision":0.7127,"recall":0.4215,"f1":0.5298,"accuracy":0.7845,"specificity":0.9313,"contacted":6663,"rev_saved_ceiling":686190.0,"rev_wasted":276753.0},{"t":0.73,"tp":4658,"fp":1840,"fn":6608,"tn":26022,"precision":0.7168,"recall":0.4135,"f1":0.5244,"accuracy":0.7841,"specificity":0.934,"contacted":6498,"rev_saved_ceiling":673400.0,"rev_wasted":267376.0},{"t":0.74,"tp":4553,"fp":1768,"fn":6713,"tn":26094,"precision":0.7203,"recall":0.4041,"f1":0.5178,"accuracy":0.7832,"specificity":0.9365,"contacted":6321,"rev_saved_ceiling":658084.0,"rev_wasted":258088.0},{"t":0.75,"tp":4462,"fp":1700,"fn":6804,"tn":26162,"precision":0.7241,"recall":0.3961,"f1":0.512,"accuracy":0.7827,"specificity":0.939,"contacted":6162,"rev_saved_ceiling":646200.0,"rev_wasted":248773.0},{"t":0.76,"tp":4336,"fp":1639,"fn":6930,"tn":26223,"precision":0.7257,"recall":0.3849,"f1":0.503,"accuracy":0.781,"specificity":0.9412,"contacted":5975,"rev_saved_ceiling":627272.0,"rev_wasted":240146.0},{"t":0.77,"tp":4224,"fp":1561,"fn":7042,"tn":26301,"precision":0.7302,"recall":0.3749,"f1":0.4955,"accuracy":0.7801,"specificity":0.944,"contacted":5785,"rev_saved_ceiling":610982.0,"rev_wasted":228480.0},{"t":0.78,"tp":4107,"fp":1487,"fn":7159,"tn":26375,"precision":0.7342,"recall":0.3645,"f1":0.4872,"accuracy":0.779,"specificity":0.9466,"contacted":5594,"rev_saved_ceiling":592978.0,"rev_wasted":218621.0},{"t":0.79,"tp":3960,"fp":1413,"fn":7306,"tn":26449,"precision":0.737,"recall":0.3515,"f1":0.476,"accuracy":0.7772,"specificity":0.9493,"contacted":5373,"rev_saved_ceiling":571086.0,"rev_wasted":208469.0},{"t":0.8,"tp":3806,"fp":1306,"fn":7460,"tn":26556,"precision":0.7445,"recall":0.3378,"f1":0.4648,"accuracy":0.776,"specificity":0.9531,"contacted":5112,"rev_saved_ceiling":549969.0,"rev_wasted":192978.0},{"t":0.81,"tp":3609,"fp":1205,"fn":7657,"tn":26657,"precision":0.7497,"recall":0.3203,"f1":0.4489,"accuracy":0.7735,"specificity":0.9568,"contacted":4814,"rev_saved_ceiling":523848.0,"rev_wasted":178086.0},{"t":0.82,"tp":3387,"fp":1092,"fn":7879,"tn":26770,"precision":0.7562,"recall":0.3006,"f1":0.4302,"accuracy":0.7707,"specificity":0.9608,"contacted":4479,"rev_saved_ceiling":493782.0,"rev_wasted":162419.0},{"t":0.83,"tp":3167,"fp":979,"fn":8099,"tn":26883,"precision":0.7639,"recall":0.2811,"f1":0.411,"accuracy":0.768,"specificity":0.9649,"contacted":4146,"rev_saved_ceiling":464776.0,"rev_wasted":146579.0},{"t":0.84,"tp":2883,"fp":853,"fn":8383,"tn":27009,"precision":0.7717,"recall":0.2559,"f1":0.3843,"accuracy":0.764,"specificity":0.9694,"contacted":3736,"rev_saved_ceiling":423239.0,"rev_wasted":127309.0},{"t":0.85,"tp":2574,"fp":733,"fn":8692,"tn":27129,"precision":0.7783,"recall":0.2285,"f1":0.3533,"accuracy":0.7591,"specificity":0.9737,"contacted":3307,"rev_saved_ceiling":377995.0,"rev_wasted":108989.0},{"t":0.86,"tp":2290,"fp":634,"fn":8976,"tn":27228,"precision":0.7832,"recall":0.2033,"f1":0.3228,"accuracy":0.7544,"specificity":0.9772,"contacted":2924,"rev_saved_ceiling":336844.0,"rev_wasted":93868.0},{"t":0.87,"tp":2015,"fp":532,"fn":9251,"tn":27330,"precision":0.7911,"recall":0.1789,"f1":0.2918,"accuracy":0.75,"specificity":0.9809,"contacted":2547,"rev_saved_ceiling":297688.0,"rev_wasted":78801.0},{"t":0.88,"tp":1716,"fp":425,"fn":9550,"tn":27437,"precision":0.8015,"recall":0.1523,"f1":0.256,"accuracy":0.7451,"specificity":0.9847,"contacted":2141,"rev_saved_ceiling":253912.0,"rev_wasted":63343.0},{"t":0.89,"tp":1368,"fp":299,"fn":9898,"tn":27563,"precision":0.8206,"recall":0.1214,"f1":0.2116,"accuracy":0.7394,"specificity":0.9893,"contacted":1667,"rev_saved_ceiling":203067.0,"rev_wasted":44914.0},{"t":0.9,"tp":1046,"fp":222,"fn":10220,"tn":27640,"precision":0.8249,"recall":0.0928,"f1":0.1669,"accuracy":0.7331,"specificity":0.992,"contacted":1268,"rev_saved_ceiling":153091.0,"rev_wasted":32854.0},{"t":0.91,"tp":765,"fp":143,"fn":10501,"tn":27719,"precision":0.8425,"recall":0.0679,"f1":0.1257,"accuracy":0.728,"specificity":0.9949,"contacted":908,"rev_saved_ceiling":110679.0,"rev_wasted":20937.0},{"t":0.92,"tp":488,"fp":86,"fn":10778,"tn":27776,"precision":0.8502,"recall":0.0433,"f1":0.0824,"accuracy":0.7223,"specificity":0.9969,"contacted":574,"rev_saved_ceiling":72793.0,"rev_wasted":12418.0},{"t":0.93,"tp":237,"fp":30,"fn":11029,"tn":27832,"precision":0.8876,"recall":0.021,"f1":0.0411,"accuracy":0.7174,"specificity":0.9989,"contacted":267,"rev_saved_ceiling":38269.0,"rev_wasted":4560.0},{"t":0.94,"tp":116,"fp":11,"fn":11150,"tn":27851,"precision":0.9134,"recall":0.0103,"f1":0.0204,"accuracy":0.7148,"specificity":0.9996,"contacted":127,"rev_saved_ceiling":18922.0,"rev_wasted":1640.0},{"t":0.95,"tp":37,"fp":6,"fn":11229,"tn":27856,"precision":0.8605,"recall":0.0033,"f1":0.0065,"accuracy":0.7129,"specificity":0.9998,"contacted":43,"rev_saved_ceiling":6175.0,"rev_wasted":923.0},{"t":0.96,"tp":3,"fp":0,"fn":11263,"tn":27862,"precision":1.0,"recall":0.0003,"f1":0.0005,"accuracy":0.7121,"specificity":1.0,"contacted":3,"rev_saved_ceiling":564.0,"rev_wasted":0.0},{"t":0.97,"tp":0,"fp":0,"fn":11266,"tn":27862,"precision":0.0,"recall":0.0,"f1":0.0,"accuracy":0.7121,"specificity":1.0,"contacted":0,"rev_saved_ceiling":0.0,"rev_wasted":0.0},{"t":0.98,"tp":0,"fp":0,"fn":11266,"tn":27862,"precision":0.0,"recall":0.0,"f1":0.0,"accuracy":0.7121,"specificity":1.0,"contacted":0,"rev_saved_ceiling":0.0,"rev_wasted":0.0},{"t":0.99,"tp":0,"fp":0,"fn":11266,"tn":27862,"precision":0.0,"recall":0.0,"f1":0.0,"accuracy":0.7121,"specificity":1.0,"contacted":0,"rev_saved_ceiling":0.0,"rev_wasted":0.0}],"roc":[{"fpr":0.0,"tpr":0.0},{"fpr":0.0021175794989591558,"tpr":0.031066927037102787},{"fpr":0.00401981193022755,"tpr":0.05583170601810758},{"fpr":0.006173282607135166,"tpr":0.07606958991656311},{"fpr":0.008362644461991243,"tpr":0.10003550505947098},{"fpr":0.010444332783001938,"tpr":0.11823184803834547},{"fpr":0.012597803459909554,"tpr":0.13420912480028405},{"fpr":0.014823056492714091,"tpr":0.14921001242677082},{"fpr":0.017048309525518626,"tpr":0.16616367832416118},{"fpr":0.019596583159859307,"tpr":0.18205219243742232},{"fpr":0.02175005383676692,"tpr":0.1980294691993609},{"fpr":0.02422654511521068,"tpr":0.21462808450204154},{"fpr":0.0265594716818606,"tpr":0.23131546245339962},{"fpr":0.0293589835618405,"tpr":0.24862417894549974},{"fpr":0.031727801306438874,"tpr":0.2646902183561157},{"fpr":0.03434785729667648,"tpr":0.2772057518196343},{"fpr":0.03754217213408944,"tpr":0.2928279779868631},{"fpr":0.04016222812432704,"tpr":0.30481093555831706},{"fpr":0.0426387194027708,"tpr":0.31839162080596484},{"fpr":0.04504342832531764,"tpr":0.3296644771879993},{"fpr":0.047519919603761396,"tpr":0.34022723238061425},{"fpr":0.0508577991529682,"tpr":0.35194390200603587},{"fpr":0.05322661689756658,"tpr":0.36401562222616723},{"fpr":0.0559184552437011,"tpr":0.3739570388780401},{"fpr":0.05878974947957792,"tpr":0.3848748446653648},{"fpr":0.0615174790036609,"tpr":0.3973903781288834},{"fpr":0.06446055559543465,"tpr":0.40892952245695013},{"fpr":0.067295958653363,"tpr":0.4169181608379194},{"fpr":0.07041849113487905,"tpr":0.4262382389490502},{"fpr":0.07357691479434356,"tpr":0.436357180898278},{"fpr":0.07659177374201422,"tpr":0.44443458192792473},{"fpr":0.080396238604551,"tpr":0.4535771347417007},{"fpr":0.08387768286555165,"tpr":0.46121072252796025},{"fpr":0.08746680066039768,"tpr":0.4691993609089295},{"fpr":0.09130715670088292,"tpr":0.4770992366412214},{"fpr":0.09468092742803819,"tpr":0.48428901118409373},{"fpr":0.09798291579929654,"tpr":0.49369785194390203},{"fpr":0.10221807479721484,"tpr":0.5022190662169359},{"fpr":0.1062378867274424,"tpr":0.5096751287058405},{"fpr":0.11058071925920608,"tpr":0.5162435647079708},{"fpr":0.11460053118943364,"tpr":0.525208592224392},{"fpr":0.11847677840786734,"tpr":0.5319545535238771},{"fpr":0.12246069916014643,"tpr":0.5394106160127818},{"fpr":0.126013925777044,"tpr":0.5464228652582993},{"fpr":0.12974660828368387,"tpr":0.5537014024498491},{"fpr":0.13380231139185988,"tpr":0.5604473637493342},{"fpr":0.1373914291867059,"tpr":0.5674596129948518},{"fpr":0.14141124111693346,"tpr":0.5739392863483046},{"fpr":0.1455387265810064,"tpr":0.5810402982424996},{"fpr":0.15024047089225467,"tpr":0.5871649210012426},{"fpr":0.15544469169478142,"tpr":0.594354695544115},{"fpr":0.1600746536501328,"tpr":0.5998579797621161},{"fpr":0.1644174861818965,"tpr":0.6064264157642464},{"fpr":0.16969348934032014,"tpr":0.6128173264690219},{"fpr":0.17482592778694997,"tpr":0.6189419492277649},{"fpr":0.17992247505563133,"tpr":0.6253328599325404},{"fpr":0.1850908046802096,"tpr":0.6318125332859933},{"fpr":0.19108463139760246,"tpr":0.6386472572341558},{"fpr":0.19557102864116,"tpr":0.6450381679389313},{"fpr":0.20038044648625367,"tpr":0.6513403159950293},{"fpr":0.2052257555092958,"tpr":0.6572874134564175},{"fpr":0.21010695571028642,"tpr":0.6637670868098704},{"fpr":0.21495226473332854,"tpr":0.6711343866500976},{"fpr":0.2205871796712368,"tpr":0.6774365347061956},{"fpr":0.22604263871940278,"tpr":0.6833836321675839},{"fpr":0.23049314478501184,"tpr":0.6896857802236819},{"fpr":0.23619984207881703,"tpr":0.6954553523877153},{"fpr":0.24237312468595218,"tpr":0.7022013136872004},{"fpr":0.2481516043356543,"tpr":0.7087697496893307},{"fpr":0.25371473691766566,"tpr":0.714095508609977},{"fpr":0.25931376067762546,"tpr":0.7200426060713652},{"fpr":0.26466154619194604,"tpr":0.7266110420734955},{"fpr":0.2704400258416481,"tpr":0.7327356648322386},{"fpr":0.27668509080468023,"tpr":0.7398366767264335},{"fpr":0.28228411456464003,"tpr":0.7471152139179833},{"fpr":0.28802670303639366,"tpr":0.7535061246227588},{"fpr":0.2930514679491781,"tpr":0.7602520859222439},{"fpr":0.2988299475988802,"tpr":0.7662879460323097},{"fpr":0.30590050965472687,"tpr":0.7716137049529558},{"fpr":0.31243270404134665,"tpr":0.777560802414344},{"fpr":0.31846242193668794,"tpr":0.7837741878217646},{"fpr":0.3251022898571531,"tpr":0.7896325226344754},{"fpr":0.33062953126121597,"tpr":0.7959346706905734},{"fpr":0.33870504629961956,"tpr":0.8018817681519617},{"fpr":0.3452731318641878,"tpr":0.8079176282620273},{"fpr":0.3528461704113129,"tpr":0.8141310136694478},{"fpr":0.3598808412892111,"tpr":0.8199893484821587},{"fpr":0.3671308592348001,"tpr":0.8254926327001598},{"fpr":0.37359127126552294,"tpr":0.8309959169181609},{"fpr":0.38098485392290576,"tpr":0.8365879637848394},{"fpr":0.389347498384897,"tpr":0.8425350612462276},{"fpr":0.3966692986863829,"tpr":0.8479495828155512},{"fpr":0.4048524872586318,"tpr":0.8531865790875199},{"fpr":0.4124255258057569,"tpr":0.8595774897922954},{"fpr":0.42053693202210896,"tpr":0.8653470619563288},{"fpr":0.42742803818821334,"tpr":0.8705840582282975},{"fpr":0.43457038259995695,"tpr":0.8759098171489437},{"fpr":0.441748618189649,"tpr":0.8812355760695899},{"fpr":0.44881918024549566,"tpr":0.8870939108823007},{"fpr":0.4572894982413323,"tpr":0.8921533818569146},{"fpr":0.4641447132294882,"tpr":0.8976566660749157},{"fpr":0.4723279018017371,"tpr":0.9030711876442393},{"fpr":0.480116287416553,"tpr":0.9093733357003373},{"fpr":0.488227693632905,"tpr":0.9149653825670158},{"fpr":0.49727227047591704,"tpr":0.9209124800284041},{"fpr":0.5055272414040629,"tpr":0.9262382389490502},{"fpr":0.5166893977460341,"tpr":0.9310314219776318},{"fpr":0.5251597157418707,"tpr":0.9362684182496006},{"fpr":0.5326250807551504,"tpr":0.9415941771702467},{"fpr":0.5440384753427607,"tpr":0.9471862240369253},{"fpr":0.5534419639652574,"tpr":0.9526007456062489},{"fpr":0.5616969348934032,"tpr":0.9575714539321853},{"fpr":0.5723207235661475,"tpr":0.9627196875554767},{"fpr":0.5835546622640155,"tpr":0.9675128705840582},{"fpr":0.5947886009618836,"tpr":0.9723060536126398},{"fpr":0.6093604192089584,"tpr":0.9773655245872537},{"fpr":0.6208455961524657,"tpr":0.9821587076158352},{"fpr":0.6366018232718398,"tpr":0.9870406532930943},{"fpr":0.6612231713444835,"tpr":0.9915675483756435},{"fpr":0.8027420859952623,"tpr":0.9960056808095153},{"fpr":0.9974158351877108,"tpr":0.9998224747026452}],"k_sweep":[{"k":2,"inertia":407799.89526960533,"silhouette":0.43641381049008215,"davies_bouldin":0.8972390084900286,"calinski_harabasz":9133.322469075294},{"k":3,"inertia":284034.7532484544,"silhouette":0.40495823758056226,"davies_bouldin":0.9495966536424966,"calinski_harabasz":8850.01311794871},{"k":4,"inertia":211626.2445127903,"silhouette":0.41420294793785567,"davies_bouldin":0.8897412879335094,"calinski_harabasz":9383.893439238245},{"k":5,"inertia":171154.5684153659,"silhouette":0.4465359274350176,"davies_bouldin":0.8267870071033852,"calinski_harabasz":9229.52893675947},{"k":6,"inertia":141287.18053732312,"silhouette":0.4155943794686542,"davies_bouldin":0.9139274930898615,"calinski_harabasz":9385.443331916766},{"k":7,"inertia":118191.94134380718,"silhouette":0.4369648131496054,"davies_bouldin":0.8125402598987028,"calinski_harabasz":9651.250561872112},{"k":8,"inertia":102872.5679848091,"silhouette":0.386543590412043,"davies_bouldin":0.863979350982538,"calinski_harabasz":9656.989651237689},{"k":9,"inertia":93412.49178434303,"silhouette":0.36242996442178355,"davies_bouldin":0.904461538497238,"calinski_harabasz":9434.40402797246},{"k":10,"inertia":87654.77237715853,"silhouette":0.35302529637144786,"davies_bouldin":0.982033081737052,"calinski_harabasz":9100.988028594422}],"elbow_k":5,"silhouette_k":5,"cluster_eval":{"kmeans":{"model":"kmeans","n_clusters":6,"silhouette":0.4155943794686542,"davies_bouldin":0.9139274930898615,"calinski_harabasz":9385.443331916766},"gmm":{"model":"gmm","n_clusters":6,"silhouette":0.3921653157875473,"davies_bouldin":0.9304392734600384,"calinski_harabasz":8594.790079307035,"bic":-629263.3346095134,"aic":-629803.08827979,"log_likelihood":314954.544139895}},"kmeans_gmm_agreement":0.9042322633408301,"mean_gmm_confidence":0.9443163022143137,"low_confidence":5594,"model_comparison":{"logistic_regression":{"auc":0.8193183019661345,"accuracy":0.7150378245757514,"f1":0.6071176885130374},"random_forest":{"auc":0.8238852488762328,"accuracy":0.7219126967900225,"f1":0.6118503192665786},"hist_gradient_boosting":{"auc":0.8237119511301949,"accuracy":0.7850132897158045,"f1":0.5449037004977277}},"cv":{"folds":5,"cv_rows":60000,"roc_auc_mean":0.8178995049010475,"roc_auc_std":0.004499361980296536,"roc_auc_folds":[0.822305449614374,0.8094300533943555,0.8209983896940418,0.8183147385371642,0.8184488932653018],"f1_mean":0.6053314807640797,"f1_std":0.007231210018432868},"metrics_tuned":{"threshold":0.49778493666267726,"accuracy":0.7208904109589042,"balanced_accuracy":0.7340672670379971,"precision":0.5102101213376738,"recall":0.7651340315995029,"specificity":0.7030005024764913,"f1":0.6121941692411491,"roc_auc":0.8238852488762328,"pr_auc":0.645757611837116,"mcc":0.42794067303000394,"cohen_kappa":0.40749632807831127,"confusion_matrix":{"tn":19587,"fp":8275,"fn":2646,"tp":8620},"support":{"negatives":27862,"positives":11266}},"segments":[{"segment":"Premium Power","customers":13628,"pct_of_base":6.965855653240646,"avg_revenue":803.2864990234375,"avg_data_gb":23.991209030151367,"avg_dou":27.871000289916992,"avg_aon_days":1904.3040064572938,"pack_penetration":100.0,"actual_churn_rate":1.0052832403874377,"monthly_revenue_inr":10947188.0,"mean_churn_risk":0.023542387740647968,"revenue_at_risk_inr":244829.48178676903,"ucg_count":409,"utg_count":13219},{"segment":"Loyal Core","customers":53309,"pct_of_base":27.24851768554488,"avg_revenue":376.4970397949219,"avg_data_gb":14.263654708862305,"avg_dou":25.5489501953125,"avg_aon_days":1842.1558648633438,"pack_penetration":100.0,"actual_churn_rate":7.807312086139301,"monthly_revenue_inr":20070680.0,"mean_churn_risk":0.1505433867934884,"revenue_at_risk_inr":2444002.447949006,"ucg_count":1599,"utg_count":51710},{"segment":"Sleeping Giant","customers":11258,"pct_of_base":5.754446943365365,"avg_revenue":367.2781677246094,"avg_data_gb":15.224059104919434,"avg_dou":25.127641677856445,"avg_aon_days":1530.2926807603483,"pack_penetration":0.0,"actual_churn_rate":18.493515722153138,"monthly_revenue_inr":4134817.75,"mean_churn_risk":0.294624489033831,"revenue_at_risk_inr":933928.4955193684,"ucg_count":338,"utg_count":10920},{"segment":"Deal Seeker","customers":45617,"pct_of_base":23.316806379063586,"avg_revenue":205.05116271972656,"avg_data_gb":8.216721534729004,"avg_dou":21.30929183959961,"avg_aon_days":704.8999276585483,"pack_penetration":100.0,"actual_churn_rate":31.2931582524059,"monthly_revenue_inr":9353819.0,"mean_churn_risk":0.5067266413934816,"revenue_at_risk_inr":4686334.922640068,"ucg_count":1369,"utg_count":44248},{"segment":"Question Mark","customers":18947,"pct_of_base":9.68462482109998,"avg_revenue":112.40814208984375,"avg_data_gb":3.392209529876709,"avg_dou":10.409035682678223,"avg_aon_days":1067.805298991925,"pack_penetration":100.0,"actual_churn_rate":49.91291497334671,"monthly_revenue_inr":2129797.0,"mean_churn_risk":0.6675824200573295,"revenue_at_risk_inr":1523406.8418881746,"ucg_count":568,"utg_count":18379},{"segment":"Comfortably Numb","customers":52881,"pct_of_base":27.029748517685544,"avg_revenue":102.0989990234375,"avg_data_gb":2.8896002769470215,"avg_dou":10.258050918579102,"avg_aon_days":1533.5671791380646,"pack_penetration":0.0,"actual_churn_rate":49.5735708477525,"monthly_revenue_inr":5399097.0,"mean_churn_risk":0.6722690234639364,"revenue_at_risk_inr":3883426.0513188066,"ucg_count":1586,"utg_count":51295}],"segment_order":["Premium Power","Loyal Core","Sleeping Giant","Deal Seeker","Question Mark","Comfortably Numb"],"surrogate":{"accuracy":0.9940451850337354,"macro_precision":0.9939207340516057,"macro_recall":0.9927847539561049,"macro_f1":0.993349453648451,"kappa":0.9923723382288958,"labels":["Comfortably Numb","Deal Seeker","Loyal Core","Premium Power","Question Mark","Sleeping Giant"],"confusion_matrix":[[10570,0,0,0,0,6],[0,9057,36,0,30,0],[0,54,10585,19,4,0],[0,0,19,2707,0,0],[0,42,0,0,3747,0],[23,0,0,0,0,2229]]},"feature_importance":{"aon":0.24309246250380676,"average_revenue":0.22999203574579477,"average_dou":0.17550082273113993,"average_data_usage":0.073090721173863,"seg_Loyal Core":0.05895349276853295,"revenue_per_active_day":0.040090551838437946,"pack_flag":0.032570247019693695,"usage_intensity":0.03235446556060189,"seg_Comfortably Numb":0.029509312118000088,"revenue_per_gb":0.028351750649773536,"seg_Premium Power":0.02187529584195674,"seg_Deal Seeker":0.013584487333473656,"seg_Question Mark":0.012975834047816407,"is_dormant":0.004143867681919586,"seg_Sleeping Giant":0.00391465298518897},"ucg_balance":[{"feature":"average_data_usage","utg_mean":9.459418727706366,"ucg_mean":9.456773894875962,"abs_smd":0.0003524876917168568,"balanced":true},{"feature":"average_revenue","utg_mean":265.97294317306637,"ucg_mean":266.05011067533235,"abs_smd":0.0003790210841111037,"balanced":true},{"feature":"average_dou","utg_mean":19.09881383351513,"ucg_mean":19.090645765888567,"abs_smd":0.000987674069289034,"balanced":true},{"feature":"pack_flag","utg_mean":0.6721574950861828,"ucg_mean":0.6721758391548815,"abs_smd":3.9076130751991675e-05,"balanced":true},{"feature":"aon","utg_mean":1405.6232564511965,"ucg_mean":1383.632475719884,"abs_smd":0.02158553538176518,"balanced":true},{"feature":"churn","utg_mean":0.28812094577148245,"ucg_mean":0.2813085704549327,"abs_smd":0.015095495436846844,"balanced":true}],"cleaning_report":{"rows_in":201000,"dropped_duplicates":1000,"dropped_by_aon_filter":4360,"negative_revenue_floored":1105,"dou_clipped_to_0_30":0,"imputed_average_data_usage":4089,"imputed_average_revenue":2718,"rows_out":195640},"outlier_caps":{"average_data_usage":{"low":-24.66169786453247,"high":40.73953199386597,"n_capped":339},"average_revenue":{"low":-598.6570663452148,"high":1074.5935802459717,"n_capped":417}},"offer_book":{"Premium Power":{"offer":"Priority 5G + concierge retention call","action":"Retain","priority":"Very High"},"Loyal Core":{"offer":"Loyalty tier upgrade, 12-month lock-in","action":"Retain","priority":"High"},"Sleeping Giant":{"offer":"Data-to-revenue upsell: unlimited plan","action":"Upsell","priority":"High"},"Deal Seeker":{"offer":"Margin-safe bundle, no discount stacking","action":"Sustain","priority":"Medium"},"Question Mark":{"offer":"Onboarding nudge + 3-day trial pack","action":"Activate","priority":"Medium"},"Comfortably Numb":{"offer":"Low-cost reactivation SMS, no spend","action":"Reactivate","priority":"Low"}},"provenance":{"synthetic":true,"source":"Synthetic subscriber base, schema-compatible with the production feed. Generated by src/data.py from six latent behavioural populations."},"samples":[{"case_id":"HIGH_VALUE_WHALE","segment":"Premium Power","segment_confidence":0.9999662973481539,"runner_up_segment":"Loyal Core","runner_up_confidence":3.370265184611831e-05,"churn_probability":0.018377196620154378,"churn_prediction":0,"risk_band":"Low","offer":"Priority 5G + concierge retention call"},{"case_id":"LOYAL_LONG_TENURE","segment":"Loyal Core","segment_confidence":0.9995174886277208,"runner_up_segment":"Premium Power","runner_up_confidence":0.00044352080096596205,"churn_probability":0.016504432409064178,"churn_prediction":0,"risk_band":"Low","offer":"Loyalty tier upgrade, 12-month lock-in"},{"case_id":"HEAVY_DATA_LOW_SPEND","segment":"Sleeping Giant","segment_confidence":0.9999999999999993,"runner_up_segment":"Comfortably Numb","runner_up_confidence":6.983529628926068e-16,"churn_probability":0.3525774650243319,"churn_prediction":0,"risk_band":"Moderate","offer":"Data-to-revenue upsell: unlimited plan"},{"case_id":"PACK_HOPPER","segment":"Deal Seeker","segment_confidence":0.9645885073839315,"runner_up_segment":"Loyal Core","runner_up_confidence":0.033576301278881,"churn_probability":0.44623708787372707,"churn_prediction":0,"risk_band":"Moderate","offer":"Margin-safe bundle, no discount stacking"},{"case_id":"ERRATIC_LOW_ENGAGE","segment":"Question Mark","segment_confidence":0.9971776467496895,"runner_up_segment":"Deal Seeker","runner_up_confidence":0.002822247554336926,"churn_probability":0.5423315897485266,"churn_prediction":1,"risk_band":"High","offer":"Onboarding nudge + 3-day trial pack"},{"case_id":"DORMANT_STICKY","segment":"Comfortably Numb","segment_confidence":0.999999950327472,"runner_up_segment":"Sleeping Giant","runner_up_confidence":4.967252781957945e-08,"churn_probability":0.5585767156674997,"churn_prediction":1,"risk_band":"High","offer":"Low-cost reactivation SMS, no spend"},{"case_id":"BORDERLINE_MIDFIELD","segment":"Loyal Core","segment_confidence":0.6270256674139639,"runner_up_segment":"Deal Seeker","runner_up_confidence":0.37296907268622015,"churn_probability":0.27823335782535863,"churn_prediction":0,"risk_band":"Moderate","offer":"Loyalty tier upgrade, 12-month lock-in"},{"case_id":"BRAND_NEW_SIM","segment":"UNSEGMENTED (AON < 90d)","segment_confidence":0.9497916443279156,"runner_up_segment":"Loyal Core","runner_up_confidence":0.049806268950884254,"churn_probability":0.49754954585881295,"churn_prediction":0,"risk_band":"Moderate","offer":"Hold - insufficient tenure"},{"case_id":"CORPORATE_IOT_SIM","segment":"Premium Power","segment_confidence":0.8474680830190153,"runner_up_segment":"Loyal Core","runner_up_confidence":0.15253191698098437,"churn_probability":0.09686435049530001,"churn_prediction":0,"risk_band":"Low","offer":"Priority 5G + concierge retention call"},{"case_id":"CREDIT_ADJUSTED","segment":"Question Mark","segment_confidence":0.9951944198764062,"runner_up_segment":"Loyal Core","runner_up_confidence":0.003906075825662683,"churn_probability":0.5630027238978474,"churn_prediction":1,"risk_band":"High","offer":"Onboarding nudge + 3-day trial pack"}]}</script>
+<script>
+/* This file is a TEMPLATE and is not meant to be opened directly.
+   build_dashboard_data.py substitutes the real JSON into the payload tag above
+   and writes outputs/dashboard.html. Open that file instead. The guard below
+   turns the otherwise cryptic JSON.parse failure into a readable message.
+   The sentinel is assembled at runtime so this source never contains the
+   literal token, which would confuse the substitution step. */
+const SENTINEL = '__' + 'DATA' + '__';
+const RAW = document.getElementById('payload').textContent.trim();
+if (RAW === SENTINEL) {
+  document.body.innerHTML =
+    '<div style="max-width:640px;margin:14vh auto;padding:32px 36px;font-family:' +
+    '-apple-system,Segoe UI,Roboto,sans-serif;background:#fff;border:1px solid #E2E8F0;' +
+    'border-left:4px solid #C77700;border-radius:8px;line-height:1.6">' +
+    '<h2 style="margin:0 0 10px;font-size:20px;color:#16202C">This is the template, not the dashboard</h2>' +
+    '<p style="color:#5A6B80;margin:0 0 16px">The data placeholder has not been substituted, ' +
+    'so there is nothing to render.</p>' +
+    '<p style="color:#16202C;margin:0 0 8px"><b>Open this instead:</b></p>' +
+    '<p style="margin:0 0 18px"><code style="background:#F1F5F9;padding:4px 8px;border-radius:4px;' +
+    'font-family:ui-monospace,Menlo,monospace">outputs/dashboard.html</code></p>' +
+    '<p style="color:#5A6B80;margin:0">If that file is missing, regenerate it:</p>' +
+    '<pre style="background:#0B1F3A;color:#B8C7DA;padding:14px 16px;border-radius:6px;' +
+    'overflow-x:auto;font-size:13px">python stage_a_segment.py\npython stage_b_predict.py\n' +
+    'python predict_samples.py\npython build_dashboard_data.py</pre></div>';
+  throw new Error('Opened dashboard_template.html directly. Open outputs/dashboard.html instead.');
+}
+const D = JSON.parse(RAW);
+const $ = id => document.getElementById(id);
+const nf = n => Number(n).toLocaleString('en-IN');
+const pct = (v,d=1) => (v*100).toFixed(d)+'%';
+const inr = v => {
+  const a = Math.abs(v);
+  if (a >= 1e7) return '₹' + (v/1e7).toFixed(2) + ' Cr';
+  if (a >= 1e5) return '₹' + (v/1e5).toFixed(2) + ' L';
+  return '₹' + nf(Math.round(v));
+};
+const H = D.headline;
+
+/* ---------- provenance banner ---------- */
+$('prov').innerHTML = D.provenance.synthetic
+  ? `<b>Synthetic dataset.</b> ${D.provenance.source} Feature schema, business rules and the
+     full modelling pipeline are production-equivalent, and every metric below is computed from
+     an actual run. The absolute revenue and churn figures describe the simulated base and
+     should not be read as observed commercial results.`
+  : `<b>Source:</b> ${D.provenance.source} Figures below are computed from a full pipeline run.`;
+
+/* ---------- executive summary ---------- */
+(function(){
+  const segs = D.segments;
+  const byRisk = [...segs].sort((a,b)=>b.revenue_at_risk_inr-a.revenue_at_risk_inr);
+  const top = byRisk[0], second = byRisk[1];
+  const riskShare = D.segments.reduce((a,s)=>a+s.revenue_at_risk_inr,0)/H.total_revenue;
+  const highRisk = segs.filter(s=>s.actual_churn_rate>=30);
+  const hrCust = highRisk.reduce((a,s)=>a+s.customers,0);
+  const premium = segs[0];
+
+  $('exec-copy').className = 'exec';
+  $('exec-copy').innerHTML = `
+    <p>The modelled base of <b>${nf(H.clean_rows)}</b> subscribers carries
+       <b>${inr(H.total_revenue)}</b> in monthly revenue, of which <b>${inr(H.revenue_at_risk)}</b>
+       (<b>${pct(riskShare)}</b>) sits with subscribers the churn model assigns elevated
+       leaving probability.</p>
+    <p>Exposure is concentrated rather than uniform. <b>${top.segment}</b> alone accounts for
+       ${inr(top.revenue_at_risk_inr)} of revenue at risk, followed by <b>${second.segment}</b>
+       at ${inr(second.revenue_at_risk_inr)}. Together the
+       ${highRisk.length} segments with churn rates above 30% hold <b>${nf(hrCust)}</b>
+       subscribers — ${pct(hrCust/H.clean_rows)} of the base.</p>
+    <p>At the opposite end, <b>${premium.segment}</b> contributes
+       ${pct(premium.monthly_revenue_inr/H.total_revenue)} of revenue from only
+       ${pct(premium.customers/H.clean_rows)} of subscribers, at a
+       ${premium.actual_churn_rate.toFixed(1)}% churn rate. The commercial priority is
+       protecting that concentration while addressing the two high-exposure segments below.</p>
+    <p>The churn model separates leavers from stayers with <b>ROC-AUC ${H.roc_auc.toFixed(4)}</b>
+       (5-fold CV ${D.cv.roc_auc_mean.toFixed(4)} ± ${D.cv.roc_auc_std.toFixed(4)}). At the
+       operating point selected in section 04 it identifies
+       <b>${pct(D.metrics_tuned.recall)}</b> of subscribers who go on to churn.</p>`;
+
+  /* recommended actions, ordered by revenue at risk */
+  const ob = D.offer_book;
+  const rows = byRisk.map(s => {
+    const o = ob[s.segment] || {offer:'—',action:'—',priority:'—'};
+    const pri = s.actual_churn_rate >= 30 && o.priority === 'Medium' ? 'High'
+              : s.actual_churn_rate >= 30 && o.priority === 'Low' ? 'Medium' : o.priority;
+    const pc = {'Very High':'p-crit','High':'p-high','Medium':'p-mod','Low':'p-low'}[pri]||'p-na';
+    return `<tr>
+      <td style="font-weight:650">${s.segment}</td>
+      <td class="num">${nf(s.customers)}</td>
+      <td class="num">${s.actual_churn_rate.toFixed(1)}%</td>
+      <td class="num" style="font-weight:650">${inr(s.revenue_at_risk_inr)}</td>
+      <td>${o.action}</td>
+      <td style="font-size:12.5px;color:var(--slate)">${o.offer}</td>
+      <td><span class="pill ${pc}">${pri}</span></td></tr>`;
+  }).join('');
+  $('actions').innerHTML =
+    '<tr><th>Segment</th><th class="num">Subscribers</th><th class="num">Churn</th>' +
+    '<th class="num">Revenue at risk</th><th>Action</th><th>Recommended offer</th>' +
+    '<th>Priority</th></tr>' + rows;
+})();
+
+/* ---------- masthead + kpis ---------- */
+$('runbar').innerHTML = [
+  ['rows in', nf(H.raw_rows)], ['rows modelled', nf(H.clean_rows)],
+  ['model', H.best_model], ['runtime', H.runtime + 's'],
+  ['UTG / UCG', nf(H.utg) + ' / ' + nf(H.ucg)]
+].map(([k,v]) => `<span>${k} <b>${v}</b></span>`).join('');
+
+$('kpis').innerHTML = [
+  ['Subscribers modelled', nf(H.clean_rows), nf(H.dropped_aon) + ' held out by AON filter'],
+  ['Segments', H.n_segments, 'GMM, diag covariance'],
+  ['Base churn rate', pct(H.churn_base_rate,2), 'positives in the base'],
+  ['ROC-AUC', H.roc_auc.toFixed(4), 'PR-AUC ' + H.pr_auc.toFixed(4)],
+  ['Monthly revenue', inr(H.total_revenue), 'across the modelled base'],
+  ['Revenue at risk', inr(H.revenue_at_risk), 'Σ revenue × P(churn)']
+].map(([l,v,s]) => `<div class="kpi"><div class="lab">${l}</div>
+   <div class="val">${v}</div><div class="sub">${s}</div></div>`).join('');
+
+/* ---------- 01 lineage ---------- */
+const cr = D.cleaning_report;
+$('clean-tbl').innerHTML = '<tr><th>Cleaning step</th><th class="num">Rows</th></tr>' +
+  Object.entries(cr).map(([k,v]) => {
+    const nm = k.replace(/_/g,' ').replace(/^\w/,c=>c.toUpperCase());
+    const strong = (k==='rows_in'||k==='rows_out');
+    return `<tr><td${strong?' style="font-weight:650"':''}>${nm}</td>
+            <td class="num"${strong?' style="font-weight:650"':''}>${nf(v)}</td></tr>`;
+  }).join('');
+
+(function(){
+  const body = Object.entries(D.outlier_caps).map(([k,v]) =>
+    `<tr><td>${k.replace(/_/g,' ')}</td><td class="num">${v.low.toFixed(2)}</td>
+     <td class="num">${v.high.toFixed(2)}</td><td class="num">${nf(v.n_capped)}</td></tr>`).join('');
+  $('capt-tbl').innerHTML =
+    '<tr><th>Outlier fence</th><th class="num">Low</th><th class="num">High</th>' +
+    '<th class="num">Capped</th></tr>' + body;
+})();
+
+/* ---------- 02 elbow chart ---------- */
+(function(){
+  const s = D.k_sweep, W=520,Hh=280, P={l:52,r:44,t:18,b:34};
+  const iw = W-P.l-P.r, ih = Hh-P.t-P.b;
+  const ks = s.map(d=>d.k), inr_=s.map(d=>d.inertia), sil=s.map(d=>d.silhouette);
+  const xk = k => P.l + (k-ks[0])/(ks[ks.length-1]-ks[0])*iw;
+  const y1 = v => P.t + ih - (v-Math.min(...inr_))/(Math.max(...inr_)-Math.min(...inr_))*ih;
+  const smin=Math.min(...sil)-0.02, smax=Math.max(...sil)+0.02;
+  const y2 = v => P.t + ih - (v-smin)/(smax-smin)*ih;
+  let g='';
+  g += `<line x1="${P.l}" y1="${P.t+ih}" x2="${P.l+iw}" y2="${P.t+ih}" stroke="#E2E8F0"/>`;
+  ks.forEach(k=>{ g+=`<text x="${xk(k)}" y="${P.t+ih+18}" text-anchor="middle">${k}</text>`;});
+  g += `<text x="${W/2}" y="${Hh-3}" text-anchor="middle">k</text>`;
+  g += `<polyline fill="none" stroke="#0B1F3A" stroke-width="2" points="${
+        s.map(d=>xk(d.k)+','+y1(d.inertia)).join(' ')}"/>`;
+  g += `<polyline fill="none" stroke="#1B6CE8" stroke-width="2" stroke-dasharray="0" points="${
+        s.map(d=>xk(d.k)+','+y2(d.silhouette)).join(' ')}"/>`;
+  s.forEach(d=>{ g+=`<circle cx="${xk(d.k)}" cy="${y1(d.inertia)}" r="3" fill="#0B1F3A"/>
+                    <circle cx="${xk(d.k)}" cy="${y2(d.silhouette)}" r="3" fill="#1B6CE8"/>`;});
+  g += `<line x1="${xk(D.elbow_k)}" y1="${P.t}" x2="${xk(D.elbow_k)}" y2="${P.t+ih}"
+         stroke="#B3202C" stroke-dasharray="4 3"/>
+        <text x="${xk(D.elbow_k)+5}" y="${P.t+11}" fill="#B3202C">elbow k=${D.elbow_k}</text>`;
+  g += `<line x1="${xk(6)}" y1="${P.t}" x2="${xk(6)}" y2="${P.t+ih}"
+         stroke="#1B7A4B" stroke-dasharray="4 3"/>
+        <text x="${xk(6)+5}" y="${P.t+ih-6}" fill="#1B7A4B">shipped k=6</text>`;
+  $('elbow').innerHTML = g;
+})();
+
+/* ---------- 02 cluster table ---------- */
+(function(){
+  const km=D.cluster_eval.kmeans, gm=D.cluster_eval.gmm;
+  const row=(n,a,b,better)=>{
+    const aw = better==='hi' ? a>b : a<b;
+    return `<tr><td>${n}</td>
+      <td class="num${aw?' win':''}">${a.toFixed(4)}</td>
+      <td class="num${!aw?' win':''}">${b.toFixed(4)}</td></tr>`;
+  };
+  $('clust-tbl').innerHTML =
+    '<tr><th>Metric</th><th class="num">K-Means</th><th class="num">GMM</th></tr>' +
+    row('Silhouette ↑', km.silhouette, gm.silhouette,'hi') +
+    row('Davies–Bouldin ↓', km.davies_bouldin, gm.davies_bouldin,'lo') +
+    row('Calinski–Harabasz ↑', km.calinski_harabasz/1000, gm.calinski_harabasz/1000,'hi') +
+    `<tr><td>BIC ↓</td><td class="num" style="color:var(--mute)">n/a</td>
+      <td class="num">${nf(Math.round(gm.bic))}</td></tr>
+     <tr><td>Soft assignment</td><td class="num" style="color:var(--mute)">no</td>
+      <td class="num win">yes</td></tr>
+     <tr><td>Agreement</td><td class="num" colspan="2">${pct(D.kmeans_gmm_agreement,2)} best 1–1 match</td></tr>
+     <tr><td>Mean GMM confidence</td><td class="num" colspan="2">${D.mean_gmm_confidence.toFixed(4)}
+      · ${nf(D.low_confidence)} below 0.60</td></tr>`;
+  document.querySelectorAll('#clust-tbl tr')[3].querySelectorAll('.num').forEach(td=>{
+    if(td.textContent.includes('.')) td.textContent = td.textContent + 'k';
+  });
+})();
+
+/* ---------- 03 segments ---------- */
+(function(){
+  const segs = D.segments, maxRev = Math.max(...segs.map(s=>s.avg_revenue));
+  const risk = r => r<.1?'p-low':r<.35?'p-mod':r<.6?'p-high':'p-crit';
+  $('segs').innerHTML = segs.map((s,i)=>`
+    <div class="seg">
+      <div class="rank">RANK ${i+1} · ${pct(s.pct_of_base/100)} OF BASE</div>
+      <h3>${s.segment}</h3>
+      <div class="bar"><i style="width:${(s.avg_revenue/maxRev*100).toFixed(1)}%"></i></div>
+      <div class="row"><span>Customers</span><b>${nf(s.customers)}</b></div>
+      <div class="row"><span>Avg revenue</span><b>₹${s.avg_revenue.toFixed(0)}</b></div>
+      <div class="row"><span>Avg data</span><b>${s.avg_data_gb.toFixed(1)} GB</b></div>
+      <div class="row"><span>Days of usage</span><b>${s.avg_dou.toFixed(1)} / 30</b></div>
+      <div class="row"><span>Tenure</span><b>${nf(Math.round(s.avg_aon_days))} d</b></div>
+      <div class="row"><span>Pack penetration</span><b>${s.pack_penetration.toFixed(0)}%</b></div>
+      <div class="row"><span>Actual churn</span>
+        <b><span class="pill ${risk(s.actual_churn_rate/100)}">${s.actual_churn_rate.toFixed(1)}%</span></b></div>
+      <div class="row"><span>Revenue at risk</span><b>${inr(s.revenue_at_risk_inr)}</b></div>
+      <div class="row"><span>UCG holdout</span><b>${nf(s.ucg_count)}</b></div>
+    </div>`).join('');
+})();
+
+/* ---------- 04 threshold lab ---------- */
+const G = D.threshold_grid;
+$('tsize').textContent = nf(H.test_positives + H.test_negatives);
+$('brate').textContent = pct(H.churn_base_rate,2);
+$('dumbacc').textContent = pct(H.test_negatives/(H.test_positives+H.test_negatives),2);
+$('prauc').textContent = H.pr_auc.toFixed(4);
+$('m-auc').textContent = H.roc_auc.toFixed(4);
+
+/* ROC static curve */
+(function(){
+  const W=520,Hh=300,P={l:46,r:16,t:14,b:38};
+  const iw=W-P.l-P.r, ih=Hh-P.t-P.b;
+  const X=v=>P.l+v*iw, Y=v=>P.t+ih-v*ih;
+  let g=`<rect x="${P.l}" y="${P.t}" width="${iw}" height="${ih}" fill="#0F2748"/>`;
+  for(let i=0;i<=4;i++){ const v=i/4;
+    g+=`<line x1="${X(0)}" y1="${Y(v)}" x2="${X(1)}" y2="${Y(v)}" stroke="#1B3557"/>
+        <text x="${P.l-8}" y="${Y(v)+3}" text-anchor="end" fill="#6E86A3">${v.toFixed(2)}</text>
+        <text x="${X(v)}" y="${P.t+ih+16}" text-anchor="middle" fill="#6E86A3">${v.toFixed(2)}</text>`;}
+  g+=`<line x1="${X(0)}" y1="${Y(0)}" x2="${X(1)}" y2="${Y(1)}" stroke="#3C5C86" stroke-dasharray="4 3"/>`;
+  g+=`<polyline fill="none" stroke="#7FB0FF" stroke-width="2.2" points="${
+      D.roc.map(p=>X(p.fpr)+','+Y(p.tpr)).join(' ')}"/>`;
+  g+=`<text x="${X(0.5)}" y="${Hh-4}" text-anchor="middle" fill="#8FA6C0">false positive rate</text>`;
+  g+=`<circle id="oppt" cx="0" cy="0" r="6" fill="#fff" stroke="#0B1F3A" stroke-width="2"/>`;
+  $('roc').innerHTML=g;
+  window.__roc={X,Y};
+})();
+
+function render(i){
+  const r = G[i];
+  $('thrv').textContent = r.t.toFixed(2);
+  $('c-tn').textContent = nf(r.tn); $('c-fp').textContent = nf(r.fp);
+  $('c-fn').textContent = nf(r.fn); $('c-tp').textContent = nf(r.tp);
+  $('m-prec').textContent = pct(r.precision,1);
+  $('m-rec').textContent  = pct(r.recall,1);
+  $('m-f1').textContent   = r.f1.toFixed(3);
+  $('m-acc').textContent  = pct(r.accuracy,1);
+  $('m-spec').textContent = pct(r.specificity,1);
+  $('l-contact').textContent = nf(r.contacted);
+  $('l-caught').textContent  = nf(r.tp);
+  $('l-missed').textContent  = nf(r.fn);
+  $('l-save').textContent    = inr(r.rev_saved_ceiling);
+  $('l-waste').textContent   = inr(r.rev_wasted);
+  const fpr = r.fp/(r.fp+r.tn), tpr = r.recall;
+  const c = document.getElementById('oppt');
+  c.setAttribute('cx', window.__roc.X(fpr)); c.setAttribute('cy', window.__roc.Y(tpr));
+}
+$('thr').addEventListener('input', e => render(+e.target.value - 1));
+render(49);
+
+/* ---------- 05 model comparison ---------- */
+(function(){
+  const mc = D.model_comparison, best = H.best_model;
+  $('mcomp').innerHTML = '<tr><th>Candidate</th><th class="num">ROC-AUC</th>' +
+    '<th class="num">Accuracy</th><th class="num">F1</th></tr>' +
+    Object.entries(mc).map(([n,m]) => `<tr><td>${n.replace(/_/g,' ')}
+      ${n===best?'<span class="pill p-low" style="margin-left:7px">selected</span>':''}</td>
+      <td class="num${n===best?' win':''}">${m.auc.toFixed(4)}</td>
+      <td class="num">${m.accuracy.toFixed(4)}</td>
+      <td class="num">${m.f1.toFixed(4)}</td></tr>`).join('');
+  const cv = D.cv;
+  $('cvline').innerHTML = `<b>${cv.folds}-fold CV</b> on ${nf(cv.cv_rows)} rows —
+    ROC-AUC <b>${cv.roc_auc_mean.toFixed(4)} ± ${cv.roc_auc_std.toFixed(4)}</b>,
+    F1 <b>${cv.f1_mean.toFixed(4)} ± ${cv.f1_std.toFixed(4)}</b>.
+    The narrow spread across folds indicates the ${H.roc_auc.toFixed(4)} test AUC reflects
+    stable model behaviour rather than a favourable split.`;
+})();
+
+/* ---------- 05 feature importance ---------- */
+(function(){
+  const fi = Object.entries(D.feature_importance).slice(0,10);
+  const mx = Math.max(...fi.map(f=>f[1]));
+  $('fimp').innerHTML = fi.map(([n,v]) => `<div class="fi-row">
+    <div class="n">${n.replace(/_/g,' ')}</div>
+    <div class="b"><i style="width:${(v/mx*100).toFixed(1)}%"></i></div>
+    <div class="v">${v.toFixed(3)}</div></div>`).join('');
+})();
+
+/* ---------- 06 surrogate ---------- */
+(function(){
+  const S=D.surrogate, L=S.labels, C_=S.confusion_matrix;
+  const rowSums = C_.map(r=>r.reduce((a,b)=>a+b,0));
+  let h = '<tr><th class="rowh" style="border-bottom:1px solid var(--rule)">actual ╲ predicted</th>' +
+    L.map(l=>`<th class="colh">${l}</th>`).join('') + '</tr>';
+  C_.forEach((row,i)=>{
+    h += `<tr><th class="rowh">${L[i]}</th>` + row.map((v,j)=>{
+      const p = v/rowSums[i];
+      const bg = i===j ? `rgba(11,31,58,${0.25+0.75*p})` : `rgba(179,32,44,${Math.min(0.85,p*9+0.06)})`;
+      const col = (i===j&&p>0.4)||(i!==j&&p>0.09) ? '#fff' : '#16202C';
+      return `<td style="background:${bg};color:${col}">${v}</td>`;
+    }).join('') + '</tr>';
+  });
+  $('heat').innerHTML = h;
+  $('surr-tbl').innerHTML = '<tr><th>Fidelity metric</th><th class="num">Value</th></tr>' +
+    [['Accuracy',S.accuracy],['Macro precision',S.macro_precision],
+     ['Macro recall',S.macro_recall],['Macro F1',S.macro_f1],["Cohen's κ",S.kappa]]
+    .map(([k,v])=>`<tr><td>${k}</td><td class="num">${v.toFixed(4)}</td></tr>`).join('');
+})();
+
+/* ---------- 07 balance ---------- */
+(function(){
+  const b=D.ucg_balance;
+  $('balhint').textContent = b.every(r=>r.balanced)
+    ? 'All |SMD| < 0.10 — randomisation holds' : 'Imbalance detected';
+  $('bal-tbl').innerHTML = '<tr><th>Covariate</th><th class="num">UTG mean</th>' +
+    '<th class="num">UCG mean</th><th class="num">|SMD|</th><th>Balanced</th></tr>' +
+    b.map(r=>`<tr><td>${r.feature.replace(/_/g,' ')}</td>
+      <td class="num">${r.utg_mean.toFixed(4)}</td>
+      <td class="num">${r.ucg_mean.toFixed(4)}</td>
+      <td class="num">${r.abs_smd.toFixed(4)}</td>
+      <td><span class="pill ${r.balanced?'p-low':'p-high'}">${r.balanced?'yes':'NO'}</span></td></tr>`).join('');
+})();
+
+/* ---------- 08 samples ---------- */
+(function(){
+  const cls = {Low:'p-low',Moderate:'p-mod',High:'p-high',Critical:'p-crit'};
+  $('samp').innerHTML = '<tr><th>Case</th><th>Segment</th><th class="num">Conf.</th>' +
+    '<th>Runner-up</th><th class="num">P(churn)</th><th>Risk</th><th>Offer</th></tr>' +
+    D.samples.map(s=>`<tr>
+      <td style="font-family:var(--mono);font-size:11.5px">${s.case_id}</td>
+      <td style="font-weight:600">${s.segment}</td>
+      <td class="num">${(+s.segment_confidence).toFixed(3)}</td>
+      <td style="color:var(--slate)">${s.runner_up_segment}
+        <span style="color:var(--mute);font-size:11px">(${(+s.runner_up_confidence).toFixed(3)})</span></td>
+      <td class="num">${(+s.churn_probability).toFixed(3)}</td>
+      <td><span class="pill ${cls[s.risk_band]||'p-na'}">${s.risk_band}</span></td>
+      <td style="font-size:12.5px;color:var(--slate)">${s.offer}</td></tr>`).join('');
+})();
+</script>
+</body>
+</html>
